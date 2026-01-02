@@ -13,10 +13,17 @@
 
 <div id="gameUI" style="display:none;">
   <div id="hud">
-    Score: <span id="score">0</span> |
-    Level: <span id="level">1</span>
+    ❤️ Lives: <span id="lives">3</span> |
+    💰 Score: <span id="score">0</span>
   </div>
+
   <canvas id="game"></canvas>
+
+  <div id="controls">
+    <button ontouchstart="moveLeft()">⬅️</button>
+    <button ontouchstart="jump()">⬆️</button>
+    <button ontouchstart="moveRight()">➡️</button>
+  </div>
 </div>
 
 <script src="script.js"></script>
