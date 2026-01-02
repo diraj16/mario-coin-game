@@ -38,11 +38,11 @@ let player = {
   w: 110 * SCALE,
   h: 110 * SCALE,
   dy: 0,
-  jumpPower: -22 * SCALE,
+  jumpPower: -15 * SCALE,
   grounded: true
 };
 
-const gravity = 1;
+const gravity = isMobile ? 1.6 : 1.4;
 
 /* BACKGROUND SCROLL */
 let bgX = 0;
@@ -67,12 +67,16 @@ function jump() {
 
 /* SPAWN ENEMY */
 function spawnEnemy() {
+  const gap = canvas.width * 0.6 + Math.random() * canvas.width * 0.4;
+
   enemies.push({
-    x: canvas.width + Math.random() * 300,
+    x: lastEnemyX + gap,
     y: groundY - 80 * SCALE,
     w: 80 * SCALE,
     h: 80 * SCALE
   });
+
+  lastEnemyX = lastEnemyX + gap;
 }
 
 /* SPAWN COIN */
@@ -83,7 +87,7 @@ function spawnCoin() {
     size: 50 * SCALE
   });
 }
-
+let lastEnemyX = canvas.width;
 /* UPDATE */
 function update() {
   /* BACKGROUND MOVE */
@@ -109,7 +113,10 @@ function update() {
   coins = coins.filter(c => c.x + c.size > 0);
 
   /* SPAWN LOGIC */
-  if (Math.random() < 0.02) spawnEnemy();
+  if (enemies.length === 0 || enemies[enemies.length - 1].x < canvas.width * 0.6) {
+  spawnEnemy();
+}
+
   if (Math.random() < 0.015) spawnCoin();
 
   /* COLLISIONS */
@@ -155,8 +162,8 @@ function draw() {
   ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
   /* GROUND */
-  ctx.fillStyle = "green";
-  ctx.fillRect(0, groundY, canvas.width, 100);
+  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
   /* PLAYER */
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
