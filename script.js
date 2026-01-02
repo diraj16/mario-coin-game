@@ -9,13 +9,10 @@ canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
 /* IMAGES */
 const bgImg = new Image();
 bgImg.src = "assets/background.png";
-
 const playerImg = new Image();
 playerImg.src = "assets/player.png";
-
 const enemyImg = new Image();
 enemyImg.src = "assets/enemy.png";
-
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
@@ -39,7 +36,8 @@ function coinSound() {
 /* GAME STATE */
 let score = 0;
 let lives = 3;
-let speed = 6;
+let baseSpeed = 6;          // normal speed
+let jumpBoost = 3;          // extra speed during jump
 const SCALE = isMobile ? 2.2 : 1.3;
 
 /* GROUND */
@@ -68,7 +66,7 @@ let lastEnemyX = canvas.width;
 /* COINS */
 let coins = [];
 
-/* INPUT: TAP / CLICK / SPACE */
+/* INPUT */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
@@ -86,14 +84,12 @@ function jump() {
 /* SPAWN ENEMY (ONE BY ONE) */
 function spawnEnemy() {
   const gap = canvas.width * 0.9 + Math.random() * canvas.width * 0.6;
-
   enemies.push({
     x: lastEnemyX + gap,
     y: groundY - 90 * SCALE,
     w: 90 * SCALE,
     h: 90 * SCALE
   });
-
   lastEnemyX += gap;
 }
 
@@ -118,10 +114,6 @@ function rectHit(a, b) {
 
 /* UPDATE */
 function update() {
-  /* BACKGROUND */
-  bgX -= speed * 0.5;
-  if (bgX <= -canvas.width) bgX = 0;
-
   /* PLAYER PHYSICS */
   player.dy += gravity;
   player.y += player.dy;
@@ -132,12 +124,21 @@ function update() {
     player.grounded = true;
   }
 
+  /* SPEED LOGIC 🔥 */
+  let currentSpeed = player.grounded
+    ? baseSpeed
+    : baseSpeed + jumpBoost;
+
+  /* BACKGROUND */
+  bgX -= currentSpeed * 0.5;
+  if (bgX <= -canvas.width) bgX = 0;
+
   /* MOVE ENEMIES */
-  enemies.forEach(e => e.x -= speed);
+  enemies.forEach(e => e.x -= currentSpeed);
   enemies = enemies.filter(e => e.x + e.w > 0);
 
   /* MOVE COINS */
-  coins.forEach(c => c.x -= speed);
+  coins.forEach(c => c.x -= currentSpeed);
   coins = coins.filter(c => c.x + c.size > 0);
 
   /* SPAWN CONTROL */
@@ -150,7 +151,7 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* 🔥 ENEMY COLLISION (FINAL TRUTH) */
+  /* ENEMY COLLISION (GROUND ONLY) */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
