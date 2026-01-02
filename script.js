@@ -1,80 +1,61 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* SAFE CANVAS SIZE */
+/* CANVAS SIZE */
 canvas.width = Math.min(window.innerWidth, 1200);
 canvas.height = Math.min(window.innerHeight - 100, 600);
 
 /* LOAD IMAGES */
-const bg = new Image();
-bg.src = "assets/background.png";
+const bgImg = new Image();
+bgImg.src = "assets/background.png";
 
 const playerImg = new Image();
 playerImg.src = "assets/player.png";
 
-const coinImg = new Image();
-coinImg.src = "assets/coin.png";
-
 const enemyImg = new Image();
 enemyImg.src = "assets/enemy.png";
+
+const coinImg = new Image();
+coinImg.src = "assets/coin.png";
 
 /* GAME STATE */
 let score = 0;
 let lives = 3;
+let gameSpeed = 6;
 
 /* SCALE FOR MOBILE */
 const SCALE = window.innerWidth < 600 ? 1.4 : 1;
 
-/* WORLD */
-let cameraX = 0;
-
 /* GROUND */
-const groundY = canvas.height - 90;
+const groundY = canvas.height - 100;
 
-/* PLAYER (BIG & CLEAR) */
+/* PLAYER (STAYS MOSTLY FIXED) */
 let player = {
   x: 100,
   y: groundY - 90 * SCALE,
   w: 90 * SCALE,
   h: 90 * SCALE,
-  dx: 0,
   dy: 0,
-  speed: 6 * SCALE,
-  jumpPower: -18 * SCALE,
-  grounded: false
+  jumpPower: -20 * SCALE,
+  grounded: true
 };
 
-const gravity = 0.9;
+const gravity = 1;
 
-/* COIN */
-let coin = {
-  x: 600,
-  y: groundY - 60,
-  size: 45 * SCALE
-};
+/* BACKGROUND SCROLL */
+let bgX = 0;
 
-/* ENEMY */
-let enemy = {
-  x: 900,
-  y: groundY - 70,
-  w: 70,
-  h: 70,
-  dx: -2
-};
+/* ENEMIES ARRAY (INFINITE) */
+let enemies = [];
 
-/* CONTROLS (KEYBOARD) */
+/* COINS ARRAY */
+let coins = [];
+
+/* CONTROLS */
 document.addEventListener("keydown", e => {
-  if (e.key === "ArrowRight") player.dx = player.speed;
-  if (e.key === "ArrowLeft") player.dx = -player.speed;
   if ((e.key === "ArrowUp" || e.key === " ") && player.grounded) jump();
 });
 
-document.addEventListener("keyup", () => stop());
-
-/* MOBILE CONTROLS */
-function leftDown() { player.dx = -player.speed; }
-function rightDown() { player.dx = player.speed; }
-function stop() { player.dx = 0; }
 function jump() {
   if (player.grounded) {
     player.dy = player.jumpPower;
@@ -82,32 +63,79 @@ function jump() {
   }
 }
 
-/* UPDATE PLAYER */
-function updatePlayer() {
+/* SPAWN ENEMY */
+function spawnEnemy() {
+  enemies.push({
+    x: canvas.width + Math.random() * 300,
+    y: groundY - 70,
+    w: 70,
+    h: 70
+  });
+}
+
+/* SPAWN COIN */
+function spawnCoin() {
+  coins.push({
+    x: canvas.width + Math.random() * 500,
+    y: groundY - 120,
+    size: 40 * SCALE
+  });
+}
+
+/* UPDATE */
+function update() {
+  /* BACKGROUND MOVE */
+  bgX -= gameSpeed * 0.5;
+  if (bgX <= -canvas.width) bgX = 0;
+
+  /* PLAYER PHYSICS */
   player.dy += gravity;
-  player.x += player.dx;
   player.y += player.dy;
 
-  /* GROUND */
   if (player.y + player.h >= groundY) {
     player.y = groundY - player.h;
     player.dy = 0;
     player.grounded = true;
   }
 
-  /* CAMERA FOLLOW */
-  if (player.x - cameraX > canvas.width / 2) {
-    cameraX += player.speed;
-  }
+  /* ENEMY MOVE */
+  enemies.forEach(e => e.x -= gameSpeed);
+  enemies = enemies.filter(e => e.x + e.w > 0);
+
+  /* COIN MOVE */
+  coins.forEach(c => c.x -= gameSpeed);
+  coins = coins.filter(c => c.x + c.size > 0);
+
+  /* SPAWN LOGIC */
+  if (Math.random() < 0.02) spawnEnemy();
+  if (Math.random() < 0.015) spawnCoin();
+
+  /* COLLISIONS */
+  enemies.forEach(e => {
+    if (hit(player, e)) {
+      lives--;
+      document.getElementById("lives").innerText = lives;
+      enemies = [];
+      if (lives <= 0) gameOver();
+    }
+  });
+
+  coins.forEach((c, i) => {
+    if (
+      player.x < c.x + c.size &&
+      player.x + player.w > c.x &&
+      player.y < c.y + c.size &&
+      player.y + player.h > c.y
+    ) {
+      score++;
+      document.getElementById("score").innerText = score;
+      coins.splice(i, 1);
+    }
+  });
 }
 
-/* UPDATE ENEMY */
-function updateEnemy() {
-  enemy.x += enemy.dx;
-}
-
-/* COLLISIONS */
-function rectHit(a, b) {
+/* COLLISION FUNCTION */
+function hit(a, b) {
   return (
     a.x < b.x + b.w &&
     a.x + a.w > b.x &&
@@ -116,78 +144,43 @@ function rectHit(a, b) {
   );
 }
 
-function checkCoin() {
-  if (
-    player.x < coin.x + coin.size &&
-    player.x + player.w > coin.x &&
-    player.y < coin.y + coin.size &&
-    player.y + player.h > coin.y
-  ) {
-    score++;
-    document.getElementById("score").innerText = score;
-    coin.x += 500;
-  }
-}
-
-function checkEnemy() {
-  if (rectHit(player, enemy)) {
-    lives--;
-    document.getElementById("lives").innerText = lives;
-    player.x -= 100;
-    if (lives <= 0) {
-      alert("GAME OVER");
-      location.reload();
-    }
-  }
-}
-
 /* DRAW */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  /* BACKGROUND (SCROLLING) */
-  ctx.drawImage(bg, -cameraX * 0.3, 0, canvas.width * 2, canvas.height);
+  /* BACKGROUND LOOP */
+  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
   /* GROUND */
   ctx.fillStyle = "green";
-  ctx.fillRect(-cameraX, groundY, canvas.width * 3, 90);
+  ctx.fillRect(0, groundY, canvas.width, 100);
 
   /* PLAYER */
-  ctx.drawImage(
-    playerImg,
-    player.x - cameraX,
-    player.y,
-    player.w,
-    player.h
-  );
+  ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
 
-  /* COIN */
-  ctx.drawImage(
-    coinImg,
-    coin.x - cameraX,
-    coin.y,
-    coin.size,
-    coin.size
-  );
+  /* ENEMIES */
+  enemies.forEach(e => {
+    ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h);
+  });
 
-  /* ENEMY */
-  ctx.drawImage(
-    enemyImg,
-    enemy.x - cameraX,
-    enemy.y,
-    enemy.w,
-    enemy.h
-  );
+  /* COINS */
+  coins.forEach(c => {
+    ctx.drawImage(coinImg, c.x, c.y, c.size, c.size);
+  });
 }
 
-/* GAME LOOP */
+/* LOOP */
 function loop() {
-  updatePlayer();
-  updateEnemy();
-  checkCoin();
-  checkEnemy();
+  update();
   draw();
   requestAnimationFrame(loop);
 }
 
 loop();
+
+/* GAME OVER */
+function gameOver() {
+  alert("💀 GAME OVER");
+  location.reload();
+}
