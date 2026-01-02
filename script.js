@@ -1,7 +1,7 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* DEVICE & CANVAS */
+/* DEVICE */
 const isMobile = window.innerWidth < 768;
 canvas.width = isMobile ? window.innerWidth : 1200;
 canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
@@ -19,35 +19,29 @@ enemyImg.src = "assets/enemy.png";
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
-/* SIMPLE SOUND (NO MP3) */
+/* SOUND (NO MP3) */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playJumpSound() {
+function jumpSound() {
   const o = audioCtx.createOscillator();
   o.type = "square";
-  o.frequency.setValueAtTime(450, audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.18);
+  o.frequency.value = 450;
   o.connect(audioCtx.destination);
   o.start();
-  o.stop(audioCtx.currentTime + 0.18);
+  o.stop(audioCtx.currentTime + 0.15);
 }
-
-function playCoinSound() {
+function coinSound() {
   const o = audioCtx.createOscillator();
   o.type = "triangle";
-  o.frequency.setValueAtTime(900, audioCtx.currentTime);
-  o.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.12);
+  o.frequency.value = 1000;
   o.connect(audioCtx.destination);
   o.start();
-  o.stop(audioCtx.currentTime + 0.12);
+  o.stop(audioCtx.currentTime + 0.1);
 }
 
 /* GAME STATE */
 let score = 0;
 let lives = 3;
 let speed = 6;
-
-/* SCALE */
 const SCALE = isMobile ? 2.2 : 1.3;
 
 /* GROUND */
@@ -60,8 +54,8 @@ let player = {
   w: 120 * SCALE,
   h: 120 * SCALE,
   dy: 0,
-  jumpPower: -22 * SCALE,
-  grounded: true
+  grounded: true,
+  jumpPower: -24 * SCALE
 };
 
 const gravity = isMobile ? 1.7 : 1.5;
@@ -76,7 +70,7 @@ let lastEnemyX = canvas.width;
 /* COINS */
 let coins = [];
 
-/* TAP / CLICK TO JUMP */
+/* INPUT */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
@@ -87,25 +81,19 @@ function jump() {
   if (player.grounded) {
     player.dy = player.jumpPower;
     player.grounded = false;
-    playJumpSound();
+    jumpSound();
   }
 }
 
 /* SPAWN ENEMY (ONE BY ONE) */
 function spawnEnemy() {
-  const gap = canvas.width * 0.75 + Math.random() * canvas.width * 0.5;
+  const gap = canvas.width * 0.9 + Math.random() * canvas.width * 0.6;
 
   enemies.push({
     x: lastEnemyX + gap,
-    y: groundY - 100 * SCALE,
-    w: 100 * SCALE,
-    h: 100 * SCALE,
-
-    /* SMALLER HITBOX */
-    hitX: 20 * SCALE,
-    hitY: 25 * SCALE,
-    hitW: 60 * SCALE,
-    hitH: 60 * SCALE
+    y: groundY - 90 * SCALE,
+    w: 90 * SCALE,
+    h: 90 * SCALE
   });
 
   lastEnemyX += gap;
@@ -118,19 +106,6 @@ function spawnCoin() {
     y: groundY - 220 * SCALE,
     size: 55 * SCALE
   });
-}
-
-/* HITBOX COLLISION */
-function enemyHit(player, enemy) {
-  const ex = enemy.x + enemy.hitX;
-  const ey = enemy.y + enemy.hitY;
-
-  return (
-    player.x < ex + enemy.hitW &&
-    player.x + player.w > ex &&
-    player.y < ey + enemy.hitH &&
-    player.y + player.h > ey
-  );
 }
 
 /* UPDATE */
@@ -165,16 +140,29 @@ function update() {
     spawnEnemy();
   }
 
-  if (Math.random() < 0.012) spawnCoin();
+  if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION */
+  /* ENEMY COLLISION (FINAL FIX 🔥) */
   enemies.forEach((enemy, i) => {
-    if (enemyHit(player, enemy)) {
+    const playerBottom = player.y + player.h;
+    const enemyTop = enemy.y;
+
+    const overlap =
+      player.x < enemy.x + enemy.w &&
+      player.x + player.w > enemy.x &&
+      player.y < enemy.y + enemy.h &&
+      playerBottom > enemy.y;
+
+    // ❌ IGNORE collision if player is in air AND above enemy
+    if (overlap && !player.grounded && playerBottom < enemyTop + 20) {
+      return;
+    }
+
+    // ❌ REAL HIT
+    if (overlap && player.grounded) {
       lives--;
       document.getElementById("lives").innerText = lives;
       enemies.splice(i, 1);
-      player.y = groundY - player.h;
-      player.dy = 0;
       if (lives <= 0) gameOver();
     }
   });
@@ -189,7 +177,7 @@ function update() {
     ) {
       score++;
       document.getElementById("score").innerText = score;
-      playCoinSound();
+      coinSound();
       coins.splice(i, 1);
     }
   });
