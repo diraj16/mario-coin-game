@@ -1,19 +1,22 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+// FULL SCREEN CANVAS
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight - 80;
+
 let score = 0;
 let level = 1;
+let gameRunning = false;
 
 /* ===== LOAD IMAGES ===== */
 const playerImg = new Image();
-playerImg.src = "assets/player.png"; // 👈 YOUR CHARACTER IMAGE
+playerImg.src = "assets/player.png";
 
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
-/* ===== SOUNDS ===== */
-//const jumpSound = new Audio("assets/jump.mp3");
-//const coinSound = new Audio("assets/coin.mp3");
+/* ===== SOUNDS (NO MP3) ===== */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playJumpSound() {
@@ -36,56 +39,68 @@ function playCoinSound() {
   osc.stop(audioCtx.currentTime + 0.1);
 }
 
-
 /* ===== PLAYER ===== */
 let player = {
   x: 50,
-  y: 300,
-  width: 40,
-  height: 40,
+  y: canvas.height - 120,
+  width: 50,
+  height: 50,
   dx: 0,
   dy: 0,
-  speed: 4,
-  jumpPower: -12,
+  speed: 6,
+  jumpPower: -15,
   grounded: false
 };
 
-const gravity = 0.6;
+const gravity = 0.7;
 
 /* ===== GROUND ===== */
 const ground = {
   x: 0,
-  y: 350,
-  width: 800,
-  height: 50
+  y: canvas.height - 60,
+  width: canvas.width,
+  height: 60
 };
 
 /* ===== COIN ===== */
 let coin = {
   x: 300,
-  y: 250,
-  size: 30
+  y: ground.y - 80,
+  size: 35
 };
+
+function spawnCoin() {
+  coin.x = Math.random() * (canvas.width - coin.size);
+  coin.y = ground.y - 80;
+}
 
 /* ===== CONTROLS ===== */
 document.addEventListener("keydown", e => {
+  if (!gameRunning) return;
+
   if (e.key === "ArrowRight") player.dx = player.speed;
   if (e.key === "ArrowLeft") player.dx = -player.speed;
 
-  if (e.key === "ArrowUp" && player.grounded) {
+  if ((e.key === "ArrowUp" || e.key === " ") && player.grounded) {
     player.dy = player.jumpPower;
-    jumpSound.play();
+    playJumpSound();
     player.grounded = false;
   }
 });
 
-document.addEventListener("keyup", () => player.dx = 0);
+document.addEventListener("keyup", () => {
+  player.dx = 0;
+});
 
 /* ===== PHYSICS ===== */
 function updatePlayer() {
   player.dy += gravity;
   player.x += player.dx;
   player.y += player.dy;
+
+  if (player.x < 0) player.x = 0;
+  if (player.x + player.width > canvas.width)
+    player.x = canvas.width - player.width;
 
   if (player.y + player.height >= ground.y) {
     player.y = ground.y - player.height;
@@ -94,7 +109,7 @@ function updatePlayer() {
   }
 }
 
-/* ===== COIN COLLECTION ===== */
+/* ===== COIN CHECK ===== */
 function checkCoin() {
   if (
     player.x < coin.x + coin.size &&
@@ -104,10 +119,8 @@ function checkCoin() {
   ) {
     score++;
     document.getElementById("score").innerText = score;
-    coinSound.play();
-
-    coin.x = Math.random() * 740;
-    coin.y = Math.random() * 250;
+    playCoinSound();
+    spawnCoin();
 
     if (score % 5 === 0) {
       level++;
@@ -130,10 +143,19 @@ function draw() {
 
 /* ===== GAME LOOP ===== */
 function gameLoop() {
+  if (!gameRunning) return;
+
   updatePlayer();
   checkCoin();
   draw();
   requestAnimationFrame(gameLoop);
 }
 
-gameLoop();
+/* ===== START GAME ===== */
+function startGame() {
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("gameUI").style.display = "block";
+  gameRunning = true;
+  spawnCoin();
+  gameLoop();
+}
