@@ -1,7 +1,7 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* DEVICE */
+/* DEVICE & CANVAS */
 const isMobile = window.innerWidth < 768;
 canvas.width = isMobile ? window.innerWidth : 1200;
 canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
@@ -16,7 +16,7 @@ enemyImg.src = "assets/enemy.png";
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
-/* SOUND */
+/* SOUND (NO MP3) */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function jumpSound() {
   const o = audioCtx.createOscillator();
@@ -35,10 +35,11 @@ function coinSound() {
 
 /* GAME STATE */
 let score = 0;
-let lives = 1;                 // 🔥 single life
+let lives = 1;
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
+let jumpBoost = 4;          // 🔥 EXTRA SPEED DURING JUMP
 let gameRunning = true;
 
 /* BEST SCORE */
@@ -52,7 +53,7 @@ const SCALE = isMobile ? 2.2 : 1.3;
 const groundY = canvas.height - (isMobile ? 160 : 120);
 
 /* PLAYER */
-let player = {};
+let player;
 const gravity = isMobile ? 1.7 : 1.5;
 
 /* BACKGROUND */
@@ -62,11 +63,11 @@ let bgX = 0;
 let enemies = [];
 let coins = [];
 
-/* ENEMY TIMER */
+/* ENEMY SPAWN TIMER */
 let enemySpawnTimer = 0;
-let enemySpawnInterval = 120;
+let enemySpawnInterval = 120; // ~2 sec
 
-/* INPUT */
+/* INPUT: TAP / CLICK / SPACE */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
@@ -129,16 +130,21 @@ function rectHit(a, b) {
 function update() {
   if (!gameRunning) return;
 
-  /* SPEED UP WITH SCORE */
-  if (score % 5 === 0 && score !== 0 && currentSpeed < maxSpeed) {
-    currentSpeed += 0.02;
+  /* SPEED INCREASE WITH SCORE */
+  if (score !== 0 && score % 5 === 0 && currentSpeed < maxSpeed) {
+    currentSpeed += 0.01;
   }
 
+  /* 🔥 EFFECTIVE SPEED (YOUR REQUEST) */
+  let effectiveSpeed = player.grounded
+    ? currentSpeed
+    : currentSpeed + jumpBoost;
+
   /* BACKGROUND */
-  bgX -= currentSpeed * 0.5;
+  bgX -= effectiveSpeed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
 
-  /* PLAYER */
+  /* PLAYER PHYSICS */
   player.dy += gravity;
   player.y += player.dy;
 
@@ -149,14 +155,14 @@ function update() {
   }
 
   /* MOVE ENEMIES */
-  enemies.forEach(e => e.x -= currentSpeed);
+  enemies.forEach(e => e.x -= effectiveSpeed);
   enemies = enemies.filter(e => e.x + e.w > 0);
 
   /* MOVE COINS */
-  coins.forEach(c => c.x -= currentSpeed);
+  coins.forEach(c => c.x -= effectiveSpeed);
   coins = coins.filter(c => c.x + c.size > 0);
 
-  /* ENEMY TIMER */
+  /* ENEMY SPAWN TIMER */
   enemySpawnTimer++;
   if (enemySpawnTimer >= enemySpawnInterval) {
     spawnEnemy();
@@ -165,7 +171,7 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION (ONLY ON GROUND) */
+  /* ENEMY COLLISION (ONLY WHEN ON GROUND) */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
@@ -212,8 +218,6 @@ function loop() {
   draw();
   requestAnimationFrame(loop);
 }
-initPlayer();
-loop();
 
 /* GAME OVER */
 function endGame() {
@@ -246,6 +250,7 @@ function restartGame() {
   initPlayer();
   gameRunning = true;
 }
+
 /* TAP / CLICK / KEY TO RESTART WHEN GAME OVER */
 document.addEventListener("touchstart", handleRestart);
 document.addEventListener("mousedown", handleRestart);
@@ -256,3 +261,7 @@ function handleRestart() {
     restartGame();
   }
 }
+
+/* START GAME */
+initPlayer();
+loop();
