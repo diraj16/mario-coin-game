@@ -35,7 +35,7 @@ function coinSound() {
 
 /* GAME STATE */
 let score = 0;
-let lives = 3;
+let lives = 1;
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
