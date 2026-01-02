@@ -2,8 +2,11 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 /* CANVAS SIZE */
-canvas.width = Math.min(window.innerWidth, 1200);
-canvas.height = Math.min(window.innerHeight - 100, 600);
+const isMobile = window.innerWidth < 768;
+
+canvas.width = isMobile ? window.innerWidth : 1200;
+canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
+
 
 /* LOAD IMAGES */
 const bgImg = new Image();
@@ -24,19 +27,18 @@ let lives = 3;
 let gameSpeed = 6;
 
 /* SCALE FOR MOBILE */
-const SCALE = window.innerWidth < 600 ? 1.4 : 1;
+const SCALE = isMobile ? 2.2 : 1.2;
 
 /* GROUND */
-const groundY = canvas.height - 100;
-
+const groundY = canvas.height - (isMobile ? 140 : 100);
 /* PLAYER (STAYS MOSTLY FIXED) */
 let player = {
   x: 100,
-  y: groundY - 90 * SCALE,
-  w: 90 * SCALE,
-  h: 90 * SCALE,
+  y: groundY - 110 * SCALE,
+  w: 110 * SCALE,
+  h: 110 * SCALE,
   dy: 0,
-  jumpPower: -20 * SCALE,
+  jumpPower: -22 * SCALE,
   grounded: true
 };
 
@@ -67,9 +69,9 @@ function jump() {
 function spawnEnemy() {
   enemies.push({
     x: canvas.width + Math.random() * 300,
-    y: groundY - 70,
-    w: 70,
-    h: 70
+    y: groundY - 80 * SCALE,
+    w: 80 * SCALE,
+    h: 80 * SCALE
   });
 }
 
@@ -77,8 +79,8 @@ function spawnEnemy() {
 function spawnCoin() {
   coins.push({
     x: canvas.width + Math.random() * 500,
-    y: groundY - 120,
-    size: 40 * SCALE
+    y: groundY - 140 * SCALE,
+    size: 50 * SCALE
   });
 }
 
