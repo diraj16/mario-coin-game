@@ -23,7 +23,6 @@ coinImg.src = "assets/coin.png";
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function jumpSound() {
   const o = audioCtx.createOscillator();
-  o.type = "square";
   o.frequency.value = 450;
   o.connect(audioCtx.destination);
   o.start();
@@ -31,7 +30,6 @@ function jumpSound() {
 }
 function coinSound() {
   const o = audioCtx.createOscillator();
-  o.type = "triangle";
   o.frequency.value = 1000;
   o.connect(audioCtx.destination);
   o.start();
@@ -70,7 +68,7 @@ let lastEnemyX = canvas.width;
 /* COINS */
 let coins = [];
 
-/* INPUT */
+/* INPUT: TAP / CLICK / SPACE */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
@@ -108,13 +106,23 @@ function spawnCoin() {
   });
 }
 
+/* RECT COLLISION */
+function rectHit(a, b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  );
+}
+
 /* UPDATE */
 function update() {
   /* BACKGROUND */
   bgX -= speed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
 
-  /* PLAYER */
+  /* PLAYER PHYSICS */
   player.dy += gravity;
   player.y += player.dy;
 
@@ -142,30 +150,17 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION (FINAL FIX 🔥) */
-  enemies.forEach((enemy, i) => {
-    const playerBottom = player.y + player.h;
-    const enemyTop = enemy.y;
-
-    const overlap =
-      player.x < enemy.x + enemy.w &&
-      player.x + player.w > enemy.x &&
-      player.y < enemy.y + enemy.h &&
-      playerBottom > enemy.y;
-
-    // ❌ IGNORE collision if player is in air AND above enemy
-    if (overlap && !player.grounded && playerBottom < enemyTop + 20) {
-      return;
-    }
-
-    // ❌ REAL HIT
-    if (overlap && player.grounded) {
-      lives--;
-      document.getElementById("lives").innerText = lives;
-      enemies.splice(i, 1);
-      if (lives <= 0) gameOver();
-    }
-  });
+  /* 🔥 ENEMY COLLISION (FINAL TRUTH) */
+  if (player.grounded) {
+    enemies.forEach((enemy, i) => {
+      if (rectHit(player, enemy)) {
+        lives--;
+        document.getElementById("lives").innerText = lives;
+        enemies.splice(i, 1);
+        if (lives <= 0) gameOver();
+      }
+    });
+  }
 
   /* COIN COLLISION */
   coins.forEach((coin, i) => {
