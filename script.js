@@ -39,7 +39,7 @@ let lives = 1;
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
-let jumpBoost = 4;          // 🔥 EXTRA SPEED DURING JUMP
+let jumpBoost = 5;          // 🔥 EXTRA SPEED DURING JUMP
 let gameRunning = true;
 
 /* BEST SCORE */
