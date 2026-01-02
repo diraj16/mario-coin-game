@@ -1,18 +1,11 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight - 140;
+/* SAFE CANVAS SIZE */
+canvas.width = Math.min(window.innerWidth, 1200);
+canvas.height = Math.min(window.innerHeight - 100, 600);
 
-/* GAME STATE */
-let score = 0;
-let lives = 3;
-let gameRunning = false;
-
-/* SCALE FOR MOBILE */
-const SCALE = window.innerWidth < 600 ? 1.4 : 1;
-
-/* IMAGES */
+/* LOAD IMAGES */
 const bg = new Image();
 bg.src = "assets/background.png";
 
@@ -25,133 +18,105 @@ coinImg.src = "assets/coin.png";
 const enemyImg = new Image();
 enemyImg.src = "assets/enemy.png";
 
-const bossImg = new Image();
-bossImg.src = "assets/boss.png";
+/* GAME STATE */
+let score = 0;
+let lives = 3;
 
-/* SIMPLE AUDIO ENGINE */
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function beep(freq, time) {
-  const o = audioCtx.createOscillator();
-  o.frequency.value = freq;
-  o.connect(audioCtx.destination);
-  o.start();
-  o.stop(audioCtx.currentTime + time);
-}
+/* SCALE FOR MOBILE */
+const SCALE = window.innerWidth < 600 ? 1.4 : 1;
 
-/* PLAYER WITH SPRITE ANIMATION */
-let player = {
-  x: 100,
-  y: canvas.height - 240,
-  w: 90 * SCALE,
-  h: 90 * SCALE,
-  dx: 0,
-  dy: 0,
-  speed: 7 * SCALE,
-  jump: -20 * SCALE,
-  grounded: false,
-  frame: 0,
-  frameTick: 0
-};
-
-const gravity = 1;
+/* WORLD */
+let cameraX = 0;
 
 /* GROUND */
 const groundY = canvas.height - 90;
 
-/* PLATFORMS */
-const platforms = [
-  { x: 300, y: groundY - 120, w: 200, h: 20 },
-  { x: 700, y: groundY - 220, w: 200, h: 20 }
-];
+/* PLAYER (BIG & CLEAR) */
+let player = {
+  x: 100,
+  y: groundY - 90 * SCALE,
+  w: 90 * SCALE,
+  h: 90 * SCALE,
+  dx: 0,
+  dy: 0,
+  speed: 6 * SCALE,
+  jumpPower: -18 * SCALE,
+  grounded: false
+};
 
-/* COIN ANIMATION */
+const gravity = 0.9;
+
+/* COIN */
 let coin = {
-  x: 400,
-  y: groundY - 80,
-  size: 55 * SCALE,
-  frame: 0
+  x: 600,
+  y: groundY - 60,
+  size: 45 * SCALE
 };
 
 /* ENEMY */
 let enemy = {
-  x: 600,
+  x: 900,
   y: groundY - 70,
   w: 70,
   h: 70,
-  dx: 3
+  dx: -2
 };
 
-/* BOSS */
-let boss = {
-  x: canvas.width - 200,
-  y: groundY - 150,
-  w: 150,
-  h: 150,
-  dx: -2,
-  health: 5
-};
-
-/* CONTROLS */
+/* CONTROLS (KEYBOARD) */
 document.addEventListener("keydown", e => {
-  if (!gameRunning) return;
   if (e.key === "ArrowRight") player.dx = player.speed;
   if (e.key === "ArrowLeft") player.dx = -player.speed;
   if ((e.key === "ArrowUp" || e.key === " ") && player.grounded) jump();
 });
-document.addEventListener("keyup", () => player.dx = 0);
 
-function moveLeft() { player.dx = -player.speed; }
-function moveRight() { player.dx = player.speed; }
+document.addEventListener("keyup", () => stop());
+
+/* MOBILE CONTROLS */
+function leftDown() { player.dx = -player.speed; }
+function rightDown() { player.dx = player.speed; }
+function stop() { player.dx = 0; }
 function jump() {
   if (player.grounded) {
-    player.dy = player.jump;
+    player.dy = player.jumpPower;
     player.grounded = false;
-    beep(400, 0.15);
   }
 }
 
-/* PHYSICS */
+/* UPDATE PLAYER */
 function updatePlayer() {
   player.dy += gravity;
   player.x += player.dx;
   player.y += player.dy;
 
-  player.grounded = false;
-
+  /* GROUND */
   if (player.y + player.h >= groundY) {
     player.y = groundY - player.h;
     player.dy = 0;
     player.grounded = true;
   }
 
-  platforms.forEach(p => {
-    if (
-      player.x < p.x + p.w &&
-      player.x + player.w > p.x &&
-      player.y + player.h < p.y + 20 &&
-      player.y + player.h + player.dy >= p.y
-    ) {
-      player.y = p.y - player.h;
-      player.dy = 0;
-      player.grounded = true;
-    }
-  });
-
-  if (player.dx !== 0) {
-    player.frameTick++;
-    if (player.frameTick > 5) {
-      player.frame = (player.frame + 1) % 4;
-      player.frameTick = 0;
-    }
+  /* CAMERA FOLLOW */
+  if (player.x - cameraX > canvas.width / 2) {
+    cameraX += player.speed;
   }
 }
 
-/* COIN */
-function updateCoin() {
-  coin.frame = (coin.frame + 1) % 6;
+/* UPDATE ENEMY */
+function updateEnemy() {
+  enemy.x += enemy.dx;
 }
 
-function collectCoin() {
+/* COLLISIONS */
+function rectHit(a, b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  );
+}
+
+function checkCoin() {
   if (
     player.x < coin.x + coin.size &&
     player.x + player.w > coin.x &&
@@ -160,98 +125,69 @@ function collectCoin() {
   ) {
     score++;
     document.getElementById("score").innerText = score;
-    beep(900, 0.1);
-    coin.x = Math.random() * (canvas.width - coin.size);
+    coin.x += 500;
   }
 }
 
-/* ENEMY */
-function updateEnemy() {
-  enemy.x += enemy.dx;
-  if (enemy.x < 0 || enemy.x + enemy.w > canvas.width)
-    enemy.dx *= -1;
-}
-
-/* BOSS */
-function updateBoss() {
-  boss.x += boss.dx;
-  if (boss.x < 0 || boss.x + boss.w > canvas.width)
-    boss.dx *= -1;
-}
-
-/* COLLISIONS */
-function hitEnemy(obj) {
-  if (
-    player.x < obj.x + obj.w &&
-    player.x + player.w > obj.x &&
-    player.y < obj.y + obj.h &&
-    player.y + player.h > obj.y
-  ) {
+function checkEnemy() {
+  if (rectHit(player, enemy)) {
     lives--;
     document.getElementById("lives").innerText = lives;
-    beep(150, 0.3);
-    player.x = 100;
-    if (lives <= 0) gameOver();
+    player.x -= 100;
+    if (lives <= 0) {
+      alert("GAME OVER");
+      location.reload();
+    }
   }
 }
 
 /* DRAW */
 function draw() {
-  ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  /* BACKGROUND (SCROLLING) */
+  ctx.drawImage(bg, -cameraX * 0.3, 0, canvas.width * 2, canvas.height);
+
+  /* GROUND */
   ctx.fillStyle = "green";
-  ctx.fillRect(0, groundY, canvas.width, 90);
+  ctx.fillRect(-cameraX, groundY, canvas.width * 3, 90);
 
-  platforms.forEach(p => {
-    ctx.fillStyle = "#654321";
-    ctx.fillRect(p.x, p.y, p.w, p.h);
-  });
-
-  // player sprite
+  /* PLAYER */
   ctx.drawImage(
     playerImg,
-    player.frame * 90, 0, 90, 90,
-    player.x, player.y, player.w, player.h
+    player.x - cameraX,
+    player.y,
+    player.w,
+    player.h
   );
 
-  // coin sprite
+  /* COIN */
   ctx.drawImage(
     coinImg,
-    coin.frame * 50, 0, 50, 50,
-    coin.x, coin.y, coin.size, coin.size
+    coin.x - cameraX,
+    coin.y,
+    coin.size,
+    coin.size
   );
 
-  ctx.drawImage(enemyImg, enemy.x, enemy.y, enemy.w, enemy.h);
-  ctx.drawImage(bossImg, boss.x, boss.y, boss.w, boss.h);
+  /* ENEMY */
+  ctx.drawImage(
+    enemyImg,
+    enemy.x - cameraX,
+    enemy.y,
+    enemy.w,
+    enemy.h
+  );
 }
 
-/* LOOP */
-function gameLoop() {
-  if (!gameRunning) return;
+/* GAME LOOP */
+function loop() {
   updatePlayer();
-  updateCoin();
   updateEnemy();
-  updateBoss();
-  collectCoin();
-  hitEnemy(enemy);
-  hitEnemy(boss);
+  checkCoin();
+  checkEnemy();
   draw();
-  requestAnimationFrame(gameLoop);
+  requestAnimationFrame(loop);
 }
 
-/* START & GAME OVER */
-function startGame() {
-  document.getElementById("startScreen").style.display = "none";
-  document.getElementById("gameUI").style.display = "block";
-  score = 0;
-  lives = 3;
-  document.getElementById("score").innerText = score;
-  document.getElementById("lives").innerText = lives;
-  gameRunning = true;
-  gameLoop();
-}
-
-function gameOver() {
-  alert("💀 GAME OVER!");
-  location.reload();
-}
+loop();
