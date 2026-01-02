@@ -246,3 +246,13 @@ function restartGame() {
   initPlayer();
   gameRunning = true;
 }
+/* TAP / CLICK / KEY TO RESTART WHEN GAME OVER */
+document.addEventListener("touchstart", handleRestart);
+document.addEventListener("mousedown", handleRestart);
+document.addEventListener("keydown", handleRestart);
+
+function handleRestart() {
+  if (!gameRunning) {
+    restartGame();
+  }
+}
