@@ -1,7 +1,7 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* DEVICE & CANVAS */
+/* DEVICE */
 const isMobile = window.innerWidth < 768;
 canvas.width = isMobile ? window.innerWidth : 1200;
 canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
@@ -9,15 +9,19 @@ canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
 /* IMAGES */
 const bgImg = new Image();
 bgImg.src = "assets/background.png";
+
 const playerImg = new Image();
 playerImg.src = "assets/player.png";
+
 const enemyImg = new Image();
 enemyImg.src = "assets/enemy.png";
+
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
-/* SOUND (NO MP3) */
+/* AUDIO */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
 function jumpSound() {
   const o = audioCtx.createOscillator();
   o.frequency.value = 450;
@@ -25,6 +29,7 @@ function jumpSound() {
   o.start();
   o.stop(audioCtx.currentTime + 0.15);
 }
+
 function coinSound() {
   const o = audioCtx.createOscillator();
   o.frequency.value = 1000;
@@ -33,14 +38,19 @@ function coinSound() {
   o.stop(audioCtx.currentTime + 0.1);
 }
 
+/* GAME OVER MUSIC (OPTION A) */
+const gameOverMusic = new Audio("assets/gameover.mp3");
+gameOverMusic.volume = 0.6;
+
 /* GAME STATE */
 let score = 0;
 let lives = 1;
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
-let jumpBoost = 5;          // 🔥 EXTRA SPEED DURING JUMP
+let jumpBoost = 5;
 let gameRunning = true;
+let canRestart = false;
 
 /* BEST SCORE */
 let bestScore = localStorage.getItem("bestScore") || 0;
@@ -59,22 +69,22 @@ const gravity = isMobile ? 1.7 : 1.5;
 /* BACKGROUND */
 let bgX = 0;
 
-/* ENEMIES & COINS */
+/* OBJECTS */
 let enemies = [];
 let coins = [];
 
-/* ENEMY SPAWN TIMER */
+/* ENEMY TIMER */
 let enemySpawnTimer = 0;
-let enemySpawnInterval = 120; // ~2 sec
+let enemySpawnInterval = 120;
 
-/* INPUT: TAP / CLICK / SPACE */
+/* INPUT */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" || e.key === " ") jump();
 });
 
-/* INIT PLAYER */
+/* PLAYER INIT */
 function initPlayer() {
   player = {
     x: 120,
@@ -130,12 +140,12 @@ function rectHit(a, b) {
 function update() {
   if (!gameRunning) return;
 
-  /* SPEED INCREASE WITH SCORE */
+  /* SPEED INCREASE */
   if (score !== 0 && score % 5 === 0 && currentSpeed < maxSpeed) {
     currentSpeed += 0.01;
   }
 
-  /* 🔥 EFFECTIVE SPEED (YOUR REQUEST) */
+  /* EFFECTIVE SPEED */
   let effectiveSpeed = player.grounded
     ? currentSpeed
     : currentSpeed + jumpBoost;
@@ -162,7 +172,7 @@ function update() {
   coins.forEach(c => c.x -= effectiveSpeed);
   coins = coins.filter(c => c.x + c.size > 0);
 
-  /* ENEMY SPAWN TIMER */
+  /* SPAWN ENEMIES */
   enemySpawnTimer++;
   if (enemySpawnTimer >= enemySpawnInterval) {
     spawnEnemy();
@@ -171,7 +181,7 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION (ONLY WHEN ON GROUND) */
+  /* ENEMY COLLISION (GROUND ONLY) */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
@@ -207,7 +217,6 @@ function draw() {
   ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
-
   enemies.forEach(e => ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h));
   coins.forEach(c => ctx.drawImage(coinImg, c.x, c.y, c.size, c.size));
 }
@@ -222,6 +231,10 @@ function loop() {
 /* GAME OVER */
 function endGame() {
   gameRunning = false;
+  canRestart = false;
+
+  gameOverMusic.currentTime = 0;
+  gameOverMusic.play();
 
   if (score > bestScore) {
     bestScore = score;
@@ -231,10 +244,19 @@ function endGame() {
   document.getElementById("finalScore").innerText = score;
   document.getElementById("bestScore").innerText = bestScore;
   document.getElementById("gameOverScreen").style.display = "block";
+
+  gameOverMusic.onended = () => {
+    canRestart = true;
+  };
 }
 
 /* RESTART */
 function restartGame() {
+  if (!canRestart) return;
+
+  gameOverMusic.pause();
+  gameOverMusic.currentTime = 0;
+
   score = 0;
   lives = 1;
   currentSpeed = baseSpeed;
@@ -251,17 +273,17 @@ function restartGame() {
   gameRunning = true;
 }
 
-/* TAP / CLICK / KEY TO RESTART WHEN GAME OVER */
+/* TAP / CLICK / KEY TO RESTART */
 document.addEventListener("touchstart", handleRestart);
 document.addEventListener("mousedown", handleRestart);
 document.addEventListener("keydown", handleRestart);
 
 function handleRestart() {
-  if (!gameRunning) {
+  if (!gameRunning && canRestart) {
     restartGame();
   }
 }
 
-/* START GAME */
+/* START */
 initPlayer();
 loop();
