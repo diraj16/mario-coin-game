@@ -1,29 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mario Coin Game</title>
+  <title>Platform Game</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="startScreen">
-  <h1>🎮 Mario Coin Game</h1>
-  <button onclick="startGame()">▶ Start Game</button>
+<div id="hud">
+  ❤️ <span id="lives">3</span> |
+  💰 <span id="score">0</span>
 </div>
 
-<div id="gameUI" style="display:none;">
-  <div id="hud">
-    ❤️ Lives: <span id="lives">3</span> |
-    💰 Score: <span id="score">0</span>
-  </div>
+<canvas id="game"></canvas>
 
-  <canvas id="game"></canvas>
-
-  <div id="controls">
-    <button ontouchstart="moveLeft()">⬅️</button>
-    <button ontouchstart="jump()">⬆️</button>
-    <button ontouchstart="moveRight()">➡️</button>
-  </div>
+<!-- MOBILE CONTROLS -->
+<div id="controls">
+  <button ontouchstart="leftDown()" ontouchend="stop()">⬅️</button>
+  <button ontouchstart="jump()">⬆️</button>
+  <button ontouchstart="rightDown()" ontouchend="stop()">➡️</button>
 </div>
 
 <script src="script.js"></script>
