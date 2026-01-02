@@ -12,8 +12,30 @@ const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
 /* ===== SOUNDS ===== */
-const jumpSound = new Audio("assets/jump.mp3");
-const coinSound = new Audio("assets/coin.mp3");
+//const jumpSound = new Audio("assets/jump.mp3");
+//const coinSound = new Audio("assets/coin.mp3");
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playJumpSound() {
+  const osc = audioCtx.createOscillator();
+  osc.type = "square";
+  osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.2);
+  osc.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.2);
+}
+
+function playCoinSound() {
+  const osc = audioCtx.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(900, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+  osc.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.1);
+}
+
 
 /* ===== PLAYER ===== */
 let player = {
