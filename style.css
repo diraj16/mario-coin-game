@@ -1,12 +1,28 @@
 body {
   margin: 0;
-  background: #111;
+  background: black;
   color: white;
   text-align: center;
   font-family: Arial;
+  overflow: hidden;
+}
+
+#startScreen {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#startScreen button {
+  padding: 15px 30px;
+  font-size: 20px;
+  cursor: pointer;
 }
 
 canvas {
+  display: block;
   background: #5c94fc;
-  border: 4px solid white;
+  border: 3px solid white;
 }
