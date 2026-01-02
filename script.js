@@ -37,7 +37,7 @@ function coinSound() {
 let score = 0;
 let lives = 3;
 let baseSpeed = 6;          // normal speed
-let jumpBoost = 3;          // extra speed during jump
+let jumpBoost = 5;          // extra speed during jump
 const SCALE = isMobile ? 2.2 : 1.3;
 
 /* GROUND */
