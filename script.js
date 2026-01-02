@@ -36,7 +36,9 @@ function coinSound() {
 /* GAME STATE */
 let score = 0;
 let lives = 3;
-let baseSpeed = 6;          // normal speed
+let baseSpeed = 6;
+let currentSpeed = baseSpeed;
+let maxSpeed = 14;
 let jumpBoost = 5;          // extra speed during jump
 const SCALE = isMobile ? 2.2 : 1.3;
 let enemySpawnTimer = 0;
@@ -186,6 +188,10 @@ if (enemySpawnTimer >= enemySpawnInterval) {
     ) {
       score++;
       document.getElementById("score").innerText = score;
+      // increase speed every 5 points
+if (score % 5 === 0 && currentSpeed < maxSpeed) {
+  currentSpeed += 0.5;
+}
       coinSound();
       coins.splice(i, 1);
     }
