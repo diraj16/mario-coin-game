@@ -1,28 +1,18 @@
 body {
   margin: 0;
   background: black;
-  color: white;
-  font-family: Arial;
   overflow: hidden;
-}
-
-#startScreen {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-#startScreen button {
-  padding: 15px 35px;
-  font-size: 22px;
+  font-family: Arial;
 }
 
 #hud {
+  position: fixed;
+  top: 10px;
+  width: 100%;
   text-align: center;
+  color: white;
   font-size: 22px;
-  padding: 10px;
+  z-index: 10;
 }
 
 canvas {
@@ -38,10 +28,11 @@ canvas {
   display: flex;
   justify-content: center;
   gap: 20px;
+  z-index: 10;
 }
 
 #controls button {
-  font-size: 30px;
-  padding: 20px;
+  font-size: 34px;
+  padding: 22px;
   border-radius: 50%;
 }
