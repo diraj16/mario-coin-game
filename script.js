@@ -39,6 +39,9 @@ let lives = 3;
 let baseSpeed = 6;          // normal speed
 let jumpBoost = 5;          // extra speed during jump
 const SCALE = isMobile ? 2.2 : 1.3;
+let enemySpawnTimer = 0;
+let enemySpawnInterval = 120; // ~2 seconds at 60fps
+
 
 /* GROUND */
 const groundY = canvas.height - (isMobile ? 160 : 120);
@@ -61,7 +64,7 @@ let bgX = 0;
 
 /* ENEMIES */
 let enemies = [];
-let lastEnemyX = canvas.width;
+
 
 /* COINS */
 let coins = [];
@@ -137,17 +140,27 @@ function update() {
   enemies.forEach(e => e.x -= currentSpeed);
   enemies = enemies.filter(e => e.x + e.w > 0);
 
+  enemySpawnTimer++;
+
+if (enemySpawnTimer >= enemySpawnInterval) {
+  spawnEnemy();
+  enemySpawnTimer = 0;
+}
+
+
   /* MOVE COINS */
   coins.forEach(c => c.x -= currentSpeed);
   coins = coins.filter(c => c.x + c.size > 0);
 
   /* SPAWN CONTROL */
-  if (
-    enemies.length === 0 ||
-    enemies[enemies.length - 1].x < canvas.width * 0.6
-  ) {
-    spawnEnemy();
-  }
+  function spawnEnemy() {
+  enemies.push({
+    x: canvas.width + 50,
+    y: groundY - 90 * SCALE,
+    w: 90 * SCALE,
+    h: 90 * SCALE
+  });
+}
 
   if (Math.random() < 0.01) spawnCoin();
 
