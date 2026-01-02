@@ -16,7 +16,7 @@ enemyImg.src = "assets/enemy.png";
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
-/* SOUND (NO MP3) */
+/* SOUND */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function jumpSound() {
   const o = audioCtx.createOscillator();
@@ -35,41 +35,36 @@ function coinSound() {
 
 /* GAME STATE */
 let score = 0;
-let lives = 1;
+let lives = 1;                 // 🔥 single life
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
-let jumpBoost = 5;          // extra speed during jump
-const SCALE = isMobile ? 2.2 : 1.3;
-let enemySpawnTimer = 0;
-let enemySpawnInterval = 120; // ~2 seconds at 60fps
+let gameRunning = true;
 
+/* BEST SCORE */
+let bestScore = localStorage.getItem("bestScore") || 0;
+document.getElementById("bestScore").innerText = bestScore;
+
+/* SCALE */
+const SCALE = isMobile ? 2.2 : 1.3;
 
 /* GROUND */
 const groundY = canvas.height - (isMobile ? 160 : 120);
 
 /* PLAYER */
-let player = {
-  x: 120,
-  y: groundY - 120 * SCALE,
-  w: 120 * SCALE,
-  h: 120 * SCALE,
-  dy: 0,
-  grounded: true,
-  jumpPower: -24 * SCALE
-};
-
+let player = {};
 const gravity = isMobile ? 1.7 : 1.5;
 
 /* BACKGROUND */
 let bgX = 0;
 
-/* ENEMIES */
+/* ENEMIES & COINS */
 let enemies = [];
-
-
-/* COINS */
 let coins = [];
+
+/* ENEMY TIMER */
+let enemySpawnTimer = 0;
+let enemySpawnInterval = 120;
 
 /* INPUT */
 document.addEventListener("touchstart", jump);
@@ -78,7 +73,22 @@ document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" || e.key === " ") jump();
 });
 
+/* INIT PLAYER */
+function initPlayer() {
+  player = {
+    x: 120,
+    y: groundY - 120 * SCALE,
+    w: 120 * SCALE,
+    h: 120 * SCALE,
+    dy: 0,
+    grounded: true,
+    jumpPower: -24 * SCALE
+  };
+}
+
+/* JUMP */
 function jump() {
+  if (!gameRunning) return;
   if (player.grounded) {
     player.dy = player.jumpPower;
     player.grounded = false;
@@ -86,16 +96,14 @@ function jump() {
   }
 }
 
-/* SPAWN ENEMY (ONE BY ONE) */
+/* SPAWN ENEMY */
 function spawnEnemy() {
-  const gap = canvas.width * 0.9 + Math.random() * canvas.width * 0.6;
   enemies.push({
-    x: lastEnemyX + gap,
+    x: canvas.width + 50,
     y: groundY - 90 * SCALE,
     w: 90 * SCALE,
     h: 90 * SCALE
   });
-  lastEnemyX += gap;
 }
 
 /* SPAWN COIN */
@@ -119,7 +127,18 @@ function rectHit(a, b) {
 
 /* UPDATE */
 function update() {
-  /* PLAYER PHYSICS */
+  if (!gameRunning) return;
+
+  /* SPEED UP WITH SCORE */
+  if (score % 5 === 0 && score !== 0 && currentSpeed < maxSpeed) {
+    currentSpeed += 0.02;
+  }
+
+  /* BACKGROUND */
+  bgX -= currentSpeed * 0.5;
+  if (bgX <= -canvas.width) bgX = 0;
+
+  /* PLAYER */
   player.dy += gravity;
   player.y += player.dy;
 
@@ -129,51 +148,31 @@ function update() {
     player.grounded = true;
   }
 
-  /* SPEED LOGIC 🔥 */
-  let currentSpeed = player.grounded
-    ? baseSpeed
-    : baseSpeed + jumpBoost;
-
-  /* BACKGROUND */
-  bgX -= currentSpeed * 0.5;
-  if (bgX <= -canvas.width) bgX = 0;
-
   /* MOVE ENEMIES */
   enemies.forEach(e => e.x -= currentSpeed);
   enemies = enemies.filter(e => e.x + e.w > 0);
-
-  enemySpawnTimer++;
-
-if (enemySpawnTimer >= enemySpawnInterval) {
-  spawnEnemy();
-  enemySpawnTimer = 0;
-}
-
 
   /* MOVE COINS */
   coins.forEach(c => c.x -= currentSpeed);
   coins = coins.filter(c => c.x + c.size > 0);
 
-  /* SPAWN CONTROL */
-  function spawnEnemy() {
-  enemies.push({
-    x: canvas.width + 50,
-    y: groundY - 90 * SCALE,
-    w: 90 * SCALE,
-    h: 90 * SCALE
-  });
-}
+  /* ENEMY TIMER */
+  enemySpawnTimer++;
+  if (enemySpawnTimer >= enemySpawnInterval) {
+    spawnEnemy();
+    enemySpawnTimer = 0;
+  }
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION (GROUND ONLY) */
+  /* ENEMY COLLISION (ONLY ON GROUND) */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
         lives--;
         document.getElementById("lives").innerText = lives;
         enemies.splice(i, 1);
-        if (lives <= 0) gameOver();
+        if (lives <= 0) endGame();
       }
     });
   }
@@ -188,10 +187,6 @@ if (enemySpawnTimer >= enemySpawnInterval) {
     ) {
       score++;
       document.getElementById("score").innerText = score;
-      // increase speed every 5 points
-if (score % 5 === 0 && currentSpeed < maxSpeed) {
-  currentSpeed += 0.5;
-}
       coinSound();
       coins.splice(i, 1);
     }
@@ -207,13 +202,8 @@ function draw() {
 
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
 
-  enemies.forEach(e => {
-    ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h);
-  });
-
-  coins.forEach(c => {
-    ctx.drawImage(coinImg, c.x, c.y, c.size, c.size);
-  });
+  enemies.forEach(e => ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h));
+  coins.forEach(c => ctx.drawImage(coinImg, c.x, c.y, c.size, c.size));
 }
 
 /* LOOP */
@@ -222,10 +212,37 @@ function loop() {
   draw();
   requestAnimationFrame(loop);
 }
+initPlayer();
 loop();
 
 /* GAME OVER */
-function gameOver() {
-  alert("💀 GAME OVER");
-  location.reload();
+function endGame() {
+  gameRunning = false;
+
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem("bestScore", bestScore);
+  }
+
+  document.getElementById("finalScore").innerText = score;
+  document.getElementById("bestScore").innerText = bestScore;
+  document.getElementById("gameOverScreen").style.display = "block";
+}
+
+/* RESTART */
+function restartGame() {
+  score = 0;
+  lives = 1;
+  currentSpeed = baseSpeed;
+  enemies = [];
+  coins = [];
+  enemySpawnTimer = 0;
+  bgX = 0;
+
+  document.getElementById("score").innerText = score;
+  document.getElementById("lives").innerText = lives;
+  document.getElementById("gameOverScreen").style.display = "none";
+
+  initPlayer();
+  gameRunning = true;
 }
