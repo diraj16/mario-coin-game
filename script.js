@@ -99,7 +99,7 @@ function initPlayer() {
   const PLAYER_BASE = 140;
 
   player = {
-    x: canvas.width * (canvas.width < 768 ? 0.2 : 0.15),
+    x: canvas.width * 0.15,
     y: getGroundY() - PLAYER_BASE * SCALE,
     w: PLAYER_BASE * SCALE,
     h: PLAYER_BASE * SCALE,
@@ -124,7 +124,7 @@ let coins = [];
    ENEMY TIMER
 ================================ */
 let enemySpawnTimer = 0;
-let enemySpawnInterval = canvas.width < 768 ? 140 : 120;
+let enemySpawnInterval = 120;
 
 /* ===============================
    INPUT
@@ -203,9 +203,9 @@ function update() {
     currentSpeed += 0.01;
   }
 
-const effectiveSpeed = player.grounded
-  ? currentSpeed
-  : currentSpeed + jumpBoost;
+  const effectiveSpeed = player.grounded
+    ? currentSpeed
+    : currentSpeed + jumpBoost;
 
   bgX -= effectiveSpeed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
@@ -259,43 +259,18 @@ const effectiveSpeed = player.grounded
   });
 }
 
-function drawBackground() {
-  const bgRatio = bgImg.width / bgImg.height;
-  const screenRatio = canvas.width / canvas.height;
-
-  let drawWidth, drawHeight;
-
-  if (screenRatio > bgRatio) {
-    // Screen wider → fit height
-    drawHeight = canvas.height;
-    drawWidth = drawHeight * bgRatio;
-  } else {
-    // Screen taller → fit width
-    drawWidth = canvas.width;
-    drawHeight = drawWidth / bgRatio;
-  }
-
-  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
-  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
-  ctx.drawImage(bgImg, bgX, 0, drawWidth, drawHeight);
-  ctx.drawImage(bgImg, bgX + drawWidth, 0, drawWidth, drawHeight);
-}
-
 /* ===============================
    DRAW
 ================================ */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
+
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
-
-  enemies.forEach(e =>
-    ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h)
-  );
-
-  coins.forEach(c =>
-    ctx.drawImage(coinImg, c.x, c.y, c.size, c.size)
-  );
+  enemies.forEach(e => ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h));
+  coins.forEach(c => ctx.drawImage(coinImg, c.x, c.y, c.size, c.size));
 }
 
 /* ===============================
