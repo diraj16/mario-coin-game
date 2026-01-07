@@ -203,9 +203,15 @@ function update() {
     currentSpeed += 0.01;
   }
 
-  const effectiveSpeed = player.grounded
-    ? currentSpeed
-    : currentSpeed + jumpBoost;
+let effectiveSpeed = player.grounded
+  ? currentSpeed
+  : currentSpeed + jumpBoost;
+
+// slow down only on mobile
+if (canvas.width < 768) {
+  effectiveSpeed *= 0.75;
+}
+
 
   bgX -= effectiveSpeed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
@@ -259,18 +265,43 @@ function update() {
   });
 }
 
+function drawBackground() {
+  const bgRatio = bgImg.width / bgImg.height;
+  const screenRatio = canvas.width / canvas.height;
+
+  let drawWidth, drawHeight;
+
+  if (screenRatio > bgRatio) {
+    // Screen wider → fit height
+    drawHeight = canvas.height;
+    drawWidth = drawHeight * bgRatio;
+  } else {
+    // Screen taller → fit width
+    drawWidth = canvas.width;
+    drawHeight = drawWidth / bgRatio;
+  }
+
+  ctx.drawImage(bgImg, bgX, 0, drawWidth, drawHeight);
+  ctx.drawImage(bgImg, bgX + drawWidth, 0, drawWidth, drawHeight);
+}
+
 /* ===============================
    DRAW
 ================================ */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
-  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
+  drawBackground(); // ✅ REPLACEMENT
 
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
-  enemies.forEach(e => ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h));
-  coins.forEach(c => ctx.drawImage(coinImg, c.x, c.y, c.size, c.size));
+
+  enemies.forEach(e =>
+    ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h)
+  );
+
+  coins.forEach(c =>
+    ctx.drawImage(coinImg, c.x, c.y, c.size, c.size)
+  );
 }
 
 /* ===============================
