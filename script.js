@@ -5,8 +5,14 @@ const ctx = canvas.getContext("2d");
    FULLSCREEN CANVAS
 ================================ */
 function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  if (window.innerWidth < 768) {
+    // force desktop resolution on mobile
+    canvas.width = 1024;
+    canvas.height = 576;
+  } else {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
 }
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
