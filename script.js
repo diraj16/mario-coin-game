@@ -85,7 +85,7 @@ function getScale() {
 ================================ */
 // grass line is ~70% height in your background
 function getGroundY() {
-  return canvas.height * 0.85;
+  return canvas.height * 0.83;
 }
 
 /* ===============================
