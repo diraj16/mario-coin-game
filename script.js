@@ -70,20 +70,15 @@ let bestScore = localStorage.getItem("bestScore") || 0;
 document.getElementById("bestScore").innerText = bestScore;
 
 /* ===============================
-   SCALING (PRO METHOD)
+   SCALE & GROUND
 ================================ */
-// background designed for ~800px height
 const BASE_HEIGHT = 800;
 
-// dynamic scale for all devices (caps max size)
 function getScale() {
   return Math.min(canvas.height / BASE_HEIGHT, 1.4);
 }
 
-/* ===============================
-   GROUND (MATCHES GRASS LINE)
-================================ */
-// grass line is ~70% height in your background
+/* Ground slightly lower (safe) */
 function getGroundY() {
   return canvas.height * 0.8;
 }
@@ -99,7 +94,8 @@ function initPlayer() {
   const PLAYER_BASE = 140;
 
   player = {
-    x: canvas.width * 0.15,
+    // ✅ ONLY MOBILE LEFT SHIFT (SAFE)
+    x: canvas.width * (canvas.width < 768 ? 0.12 : 0.15),
     y: getGroundY() - PLAYER_BASE * SCALE,
     w: PLAYER_BASE * SCALE,
     h: PLAYER_BASE * SCALE,
@@ -207,9 +203,11 @@ function update() {
     ? currentSpeed
     : currentSpeed + jumpBoost;
 
+  /* BACKGROUND MOVE */
   bgX -= effectiveSpeed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
 
+  /* PLAYER PHYSICS */
   player.dy += gravity;
   player.y += player.dy;
 
@@ -219,12 +217,15 @@ function update() {
     player.grounded = true;
   }
 
+  /* MOVE ENEMIES */
   enemies.forEach(e => (e.x -= effectiveSpeed));
   enemies = enemies.filter(e => e.x + e.w > 0);
 
+  /* MOVE COINS */
   coins.forEach(c => (c.x -= effectiveSpeed));
   coins = coins.filter(c => c.x + c.size > 0);
 
+  /* SPAWN */
   enemySpawnTimer++;
   if (enemySpawnTimer >= enemySpawnInterval) {
     spawnEnemy();
@@ -233,6 +234,7 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
+  /* ENEMY COLLISION */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
@@ -244,6 +246,7 @@ function update() {
     });
   }
 
+  /* COIN COLLISION */
   coins.forEach((coin, i) => {
     if (
       player.x < coin.x + coin.size &&
@@ -265,6 +268,7 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // ✅ BACKGROUND ALWAYS VISIBLE
   ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
   ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
