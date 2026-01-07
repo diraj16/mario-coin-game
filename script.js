@@ -72,26 +72,26 @@ let bestScore = localStorage.getItem("bestScore") || 0;
 document.getElementById("bestScore").innerText = bestScore;
 
 /* ===============================
-   SCALE & GROUND
+   SCALE & GROUND (FIXED)
 ================================ */
-const SCALE = isMobile ? 2.8 : 1.3;
+const SCALE = isMobile ? 2.1 : 1.3;
 
 function getGroundY() {
-  return canvas.height - (isMobile ? 200 : 120);
+  return canvas.height - (isMobile ? 280 : 160);
 }
 
 /* ===============================
    PLAYER
 ================================ */
 let player;
-const gravity = isMobile ? 1.8 : 1.5;
+const gravity = isMobile ? 1.7 : 1.5;
 
 function initPlayer() {
   player = {
     x: 120,
-    y: getGroundY() - 140 * SCALE,
-    w: 140 * SCALE,
-    h: 140 * SCALE,
+    y: getGroundY() - (isMobile ? 120 : 140) * SCALE,
+    w: (isMobile ? 120 : 140) * SCALE,
+    h: (isMobile ? 120 : 140) * SCALE,
     dy: 0,
     grounded: true,
     jumpPower: -26 * SCALE
@@ -116,7 +116,7 @@ let enemySpawnTimer = 0;
 let enemySpawnInterval = 120;
 
 /* ===============================
-   INPUT (TAP / CLICK / SPACE)
+   INPUT
 ================================ */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
@@ -125,11 +125,15 @@ document.addEventListener("keydown", e => {
 });
 
 /* ENTER FULLSCREEN ON FIRST TAP */
-document.addEventListener("touchstart", () => {
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen();
-  }
-}, { once: true });
+document.addEventListener(
+  "touchstart",
+  () => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+    }
+  },
+  { once: true }
+);
 
 function jump() {
   if (!gameRunning) return;
@@ -146,16 +150,16 @@ function jump() {
 function spawnEnemy() {
   enemies.push({
     x: canvas.width + 50,
-    y: getGroundY() - 90 * SCALE,
-    w: 90 * SCALE,
-    h: 90 * SCALE
+    y: getGroundY() - (isMobile ? 75 : 90) * SCALE,
+    w: (isMobile ? 75 : 90) * SCALE,
+    h: (isMobile ? 75 : 90) * SCALE
   });
 }
 
 function spawnCoin() {
   coins.push({
     x: canvas.width + Math.random() * 600,
-    y: getGroundY() - 240 * SCALE,
+    y: getGroundY() - (isMobile ? 300 : 240) * SCALE,
     size: 55 * SCALE
   });
 }
@@ -178,21 +182,17 @@ function rectHit(a, b) {
 function update() {
   if (!gameRunning) return;
 
-  /* SPEED INCREASE WITH SCORE */
   if (score !== 0 && score % 5 === 0 && currentSpeed < maxSpeed) {
     currentSpeed += 0.01;
   }
 
-  /* EFFECTIVE SPEED */
   const effectiveSpeed = player.grounded
     ? currentSpeed
     : currentSpeed + jumpBoost;
 
-  /* BACKGROUND */
   bgX -= effectiveSpeed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
 
-  /* PLAYER PHYSICS */
   player.dy += gravity;
   player.y += player.dy;
 
@@ -202,15 +202,12 @@ function update() {
     player.grounded = true;
   }
 
-  /* MOVE ENEMIES */
-  enemies.forEach(e => e.x -= effectiveSpeed);
+  enemies.forEach(e => (e.x -= effectiveSpeed));
   enemies = enemies.filter(e => e.x + e.w > 0);
 
-  /* MOVE COINS */
-  coins.forEach(c => c.x -= effectiveSpeed);
+  coins.forEach(c => (c.x -= effectiveSpeed));
   coins = coins.filter(c => c.x + c.size > 0);
 
-  /* SPAWN ENEMIES */
   enemySpawnTimer++;
   if (enemySpawnTimer >= enemySpawnInterval) {
     spawnEnemy();
@@ -219,7 +216,6 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION (ONLY ON GROUND) */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
@@ -231,7 +227,6 @@ function update() {
     });
   }
 
-  /* COIN COLLISION */
   coins.forEach((coin, i) => {
     if (
       player.x < coin.x + coin.size &&
@@ -257,14 +252,8 @@ function draw() {
   ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
-
-  enemies.forEach(e =>
-    ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h)
-  );
-
-  coins.forEach(c =>
-    ctx.drawImage(coinImg, c.x, c.y, c.size, c.size)
-  );
+  enemies.forEach(e => ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h));
+  coins.forEach(c => ctx.drawImage(coinImg, c.x, c.y, c.size, c.size));
 }
 
 /* ===============================
@@ -331,9 +320,7 @@ document.addEventListener("mousedown", handleRestart);
 document.addEventListener("keydown", handleRestart);
 
 function handleRestart() {
-  if (!gameRunning && canRestart) {
-    restartGame();
-  }
+  if (!gameRunning && canRestart) restartGame();
 }
 
 /* ===============================
