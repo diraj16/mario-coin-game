@@ -101,7 +101,7 @@ function initPlayer() {
 
   player = {
     // ✅ ONLY MOBILE LEFT SHIFT (SAFE)
-    x: canvas.width * (canvas.width < 768 ? 0.10 : 0.15),
+    x: canvas.width < 768 ? 80 : canvas.width * 0.15,
     y: getGroundY() - PLAYER_BASE * SCALE,
     w: PLAYER_BASE * SCALE,
     h: PLAYER_BASE * SCALE,
