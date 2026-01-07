@@ -99,7 +99,7 @@ function initPlayer() {
   const PLAYER_BASE = 140;
 
   player = {
-    x: canvas.width * 0.15,
+    x: canvas.width * (canvas.width < 768 ? 0.2 : 0.15),
     y: getGroundY() - PLAYER_BASE * SCALE,
     w: PLAYER_BASE * SCALE,
     h: PLAYER_BASE * SCALE,
@@ -124,7 +124,7 @@ let coins = [];
    ENEMY TIMER
 ================================ */
 let enemySpawnTimer = 0;
-let enemySpawnInterval = 120;
+let enemySpawnInterval = canvas.width < 768 ? 140 : 120;
 
 /* ===============================
    INPUT
@@ -203,15 +203,9 @@ function update() {
     currentSpeed += 0.01;
   }
 
-let effectiveSpeed = player.grounded
+const effectiveSpeed = player.grounded
   ? currentSpeed
   : currentSpeed + jumpBoost;
-
-// slow down only on mobile
-if (canvas.width < 768) {
-  effectiveSpeed *= 0.75;
-}
-
 
   bgX -= effectiveSpeed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
@@ -281,6 +275,8 @@ function drawBackground() {
     drawHeight = drawWidth / bgRatio;
   }
 
+  ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
+  ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
   ctx.drawImage(bgImg, bgX, 0, drawWidth, drawHeight);
   ctx.drawImage(bgImg, bgX + drawWidth, 0, drawWidth, drawHeight);
 }
@@ -290,8 +286,6 @@ function drawBackground() {
 ================================ */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  drawBackground(); // ✅ REPLACEMENT
 
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
 
