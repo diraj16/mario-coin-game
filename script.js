@@ -1,17 +1,21 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* DEVICE */
+/* ===============================
+   DEVICE & FULLSCREEN CANVAS
+================================ */
+const isMobile = window.innerWidth < 768;
+
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
-;
 
-/* IMAGES */
+/* ===============================
+   IMAGES
+================================ */
 const bgImg = new Image();
 bgImg.src = "assets/background.png";
 
@@ -24,7 +28,9 @@ enemyImg.src = "assets/enemy.png";
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
-/* AUDIO */
+/* ===============================
+   AUDIO
+================================ */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function jumpSound() {
@@ -43,17 +49,21 @@ function coinSound() {
   o.stop(audioCtx.currentTime + 0.1);
 }
 
-/* GAME OVER MUSIC (OPTION A) */
+/* GAME OVER MUSIC */
 const gameOverMusic = new Audio("assets/gameover.mp3");
 gameOverMusic.volume = 0.6;
 
-/* GAME STATE */
+/* ===============================
+   GAME STATE
+================================ */
 let score = 0;
 let lives = 1;
+
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
 let jumpBoost = 5;
+
 let gameRunning = true;
 let canRestart = false;
 
@@ -61,48 +71,66 @@ let canRestart = false;
 let bestScore = localStorage.getItem("bestScore") || 0;
 document.getElementById("bestScore").innerText = bestScore;
 
-/* SCALE */
-const SCALE = isMobile ? 2.2 : 1.3;
+/* ===============================
+   SCALE & GROUND
+================================ */
+const SCALE = isMobile ? 2.8 : 1.3;
 
-/* GROUND */
-const groundY = canvas.height - (isMobile ? 160 : 120);
+function getGroundY() {
+  return canvas.height - (isMobile ? 200 : 120);
+}
 
-/* PLAYER */
+/* ===============================
+   PLAYER
+================================ */
 let player;
-const gravity = isMobile ? 1.7 : 1.5;
+const gravity = isMobile ? 1.8 : 1.5;
 
-/* BACKGROUND */
+function initPlayer() {
+  player = {
+    x: 120,
+    y: getGroundY() - 140 * SCALE,
+    w: 140 * SCALE,
+    h: 140 * SCALE,
+    dy: 0,
+    grounded: true,
+    jumpPower: -26 * SCALE
+  };
+}
+
+/* ===============================
+   BACKGROUND
+================================ */
 let bgX = 0;
 
-/* OBJECTS */
+/* ===============================
+   OBJECTS
+================================ */
 let enemies = [];
 let coins = [];
 
-/* ENEMY TIMER */
+/* ===============================
+   ENEMY TIMER
+================================ */
 let enemySpawnTimer = 0;
 let enemySpawnInterval = 120;
 
-/* INPUT */
+/* ===============================
+   INPUT (TAP / CLICK / SPACE)
+================================ */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" || e.key === " ") jump();
 });
 
-/* PLAYER INIT */
-function initPlayer() {
-  player = {
-    x: 120,
-    y: groundY - 120 * SCALE,
-    w: 120 * SCALE,
-    h: 120 * SCALE,
-    dy: 0,
-    grounded: true,
-    jumpPower: -24 * SCALE
-  };
-}
+/* ENTER FULLSCREEN ON FIRST TAP */
+document.addEventListener("touchstart", () => {
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+}, { once: true });
 
-/* JUMP */
 function jump() {
   if (!gameRunning) return;
   if (player.grounded) {
@@ -112,26 +140,29 @@ function jump() {
   }
 }
 
-/* SPAWN ENEMY */
+/* ===============================
+   SPAWN FUNCTIONS
+================================ */
 function spawnEnemy() {
   enemies.push({
     x: canvas.width + 50,
-    y: groundY - 90 * SCALE,
+    y: getGroundY() - 90 * SCALE,
     w: 90 * SCALE,
     h: 90 * SCALE
   });
 }
 
-/* SPAWN COIN */
 function spawnCoin() {
   coins.push({
     x: canvas.width + Math.random() * 600,
-    y: groundY - 220 * SCALE,
+    y: getGroundY() - 240 * SCALE,
     size: 55 * SCALE
   });
 }
 
-/* RECT COLLISION */
+/* ===============================
+   COLLISION
+================================ */
 function rectHit(a, b) {
   return (
     a.x < b.x + b.w &&
@@ -141,17 +172,19 @@ function rectHit(a, b) {
   );
 }
 
-/* UPDATE */
+/* ===============================
+   UPDATE
+================================ */
 function update() {
   if (!gameRunning) return;
 
-  /* SPEED INCREASE */
+  /* SPEED INCREASE WITH SCORE */
   if (score !== 0 && score % 5 === 0 && currentSpeed < maxSpeed) {
     currentSpeed += 0.01;
   }
 
   /* EFFECTIVE SPEED */
-  let effectiveSpeed = player.grounded
+  const effectiveSpeed = player.grounded
     ? currentSpeed
     : currentSpeed + jumpBoost;
 
@@ -163,8 +196,8 @@ function update() {
   player.dy += gravity;
   player.y += player.dy;
 
-  if (player.y + player.h >= groundY) {
-    player.y = groundY - player.h;
+  if (player.y + player.h >= getGroundY()) {
+    player.y = getGroundY() - player.h;
     player.dy = 0;
     player.grounded = true;
   }
@@ -186,7 +219,7 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION (GROUND ONLY) */
+  /* ENEMY COLLISION (ONLY ON GROUND) */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
@@ -214,7 +247,9 @@ function update() {
   });
 }
 
-/* DRAW */
+/* ===============================
+   DRAW
+================================ */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -222,18 +257,28 @@ function draw() {
   ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
   ctx.drawImage(playerImg, player.x, player.y, player.w, player.h);
-  enemies.forEach(e => ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h));
-  coins.forEach(c => ctx.drawImage(coinImg, c.x, c.y, c.size, c.size));
+
+  enemies.forEach(e =>
+    ctx.drawImage(enemyImg, e.x, e.y, e.w, e.h)
+  );
+
+  coins.forEach(c =>
+    ctx.drawImage(coinImg, c.x, c.y, c.size, c.size)
+  );
 }
 
-/* LOOP */
+/* ===============================
+   LOOP
+================================ */
 function loop() {
   update();
   draw();
   requestAnimationFrame(loop);
 }
 
-/* GAME OVER */
+/* ===============================
+   GAME OVER
+================================ */
 function endGame() {
   gameRunning = false;
   canRestart = false;
@@ -255,7 +300,9 @@ function endGame() {
   };
 }
 
-/* RESTART */
+/* ===============================
+   RESTART
+================================ */
 function restartGame() {
   if (!canRestart) return;
 
@@ -282,11 +329,6 @@ function restartGame() {
 document.addEventListener("touchstart", handleRestart);
 document.addEventListener("mousedown", handleRestart);
 document.addEventListener("keydown", handleRestart);
-document.addEventListener("touchstart", () => {
-  if (document.documentElement.requestFullscreen) {
-    document.documentElement.requestFullscreen();
-  }
-}, { once: true });
 
 function handleRestart() {
   if (!gameRunning && canRestart) {
@@ -294,6 +336,10 @@ function handleRestart() {
   }
 }
 
-/* START */
-initPlayer();
-loop();
+/* ===============================
+   START GAME
+================================ */
+bgImg.onload = () => {
+  initPlayer();
+  loop();
+};
