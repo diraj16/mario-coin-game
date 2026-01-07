@@ -2,9 +2,14 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 /* DEVICE */
-const isMobile = window.innerWidth < 768;
-canvas.width = isMobile ? window.innerWidth : 1200;
-canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+;
 
 /* IMAGES */
 const bgImg = new Image();
@@ -277,6 +282,11 @@ function restartGame() {
 document.addEventListener("touchstart", handleRestart);
 document.addEventListener("mousedown", handleRestart);
 document.addEventListener("keydown", handleRestart);
+document.addEventListener("touchstart", () => {
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
+}, { once: true });
 
 function handleRestart() {
   if (!gameRunning && canRestart) {
