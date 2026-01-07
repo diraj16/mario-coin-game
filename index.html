@@ -1,29 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>Charan The Runner</title>
+
+  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
-  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- Mobile Fullscreen Meta -->
+  <meta name="viewport"
+        content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+  <!-- Theme color (Android address bar) -->
+  <meta name="theme-color" content="#000000">
 </head>
+
 <body>
 
-<div id="hud">
-  ❤️ <span id="lives">1</span> |
-  💰 <span id="score">0</span>
-</div>
+  <!-- HUD -->
+  <div id="hud">
+    ❤️ <span id="lives">1</span>
+    &nbsp;|&nbsp;
+    💰 <span id="score">0</span>
+  </div>
 
-<canvas id="game"></canvas>
-  <div id="gameOverScreen" style="display:none; text-align:center; color:white;">
-  <h1>Game Over</h1>
-  <p>Score: <span id="finalScore">0</span></p>
-  <p>Best Score: <span id="bestScore">0</span></p>
-</div>
+  <!-- Game Canvas -->
+  <canvas id="game"></canvas>
 
+  <!-- Game Over Screen -->
+  <div id="gameOverScreen">
+    <h1>Game Over</h1>
+    <p>Score: <span id="finalScore">0</span></p>
+    <p>Best Score: <span id="bestScore">0</span></p>
+    <p style="opacity:0.7;">Tap anywhere to restart</p>
+  </div>
 
-<script src="script.js"></script>
+  <!-- Game Script -->
+  <script src="script.js"></script>
+
 </body>
 </html>
