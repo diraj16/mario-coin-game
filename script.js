@@ -2,10 +2,8 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 /* ===============================
-   DEVICE & FULLSCREEN CANVAS
+   FULLSCREEN CANVAS
 ================================ */
-const isMobile = window.innerWidth < 768;
-
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -72,26 +70,39 @@ let bestScore = localStorage.getItem("bestScore") || 0;
 document.getElementById("bestScore").innerText = bestScore;
 
 /* ===============================
-   SCALE & GROUND (FIXED)
+   SCALING (PRO METHOD)
 ================================ */
-const SCALE = isMobile ? 2.1 : 1.3;
+// background designed for ~800px height
+const BASE_HEIGHT = 800;
 
+// dynamic scale for all devices (caps max size)
+function getScale() {
+  return Math.min(canvas.height / BASE_HEIGHT, 1.4);
+}
+
+/* ===============================
+   GROUND (MATCHES GRASS LINE)
+================================ */
+// grass line is ~70% height in your background
 function getGroundY() {
-  return canvas.height - (isMobile ? 280 : 160);
+  return canvas.height * 0.7;
 }
 
 /* ===============================
    PLAYER
 ================================ */
 let player;
-const gravity = isMobile ? 1.7 : 1.5;
+const gravity = 1.6;
 
 function initPlayer() {
+  const SCALE = getScale();
+  const PLAYER_BASE = 140;
+
   player = {
-    x: 120,
-    y: getGroundY() - (isMobile ? 120 : 140) * SCALE,
-    w: (isMobile ? 120 : 140) * SCALE,
-    h: (isMobile ? 120 : 140) * SCALE,
+    x: canvas.width * 0.15,
+    y: getGroundY() - PLAYER_BASE * SCALE,
+    w: PLAYER_BASE * SCALE,
+    h: PLAYER_BASE * SCALE,
     dy: 0,
     grounded: true,
     jumpPower: -26 * SCALE
@@ -148,19 +159,25 @@ function jump() {
    SPAWN FUNCTIONS
 ================================ */
 function spawnEnemy() {
+  const SCALE = getScale();
+  const ENEMY_BASE = 90;
+
   enemies.push({
     x: canvas.width + 50,
-    y: getGroundY() - (isMobile ? 75 : 90) * SCALE,
-    w: (isMobile ? 75 : 90) * SCALE,
-    h: (isMobile ? 75 : 90) * SCALE
+    y: getGroundY() - ENEMY_BASE * SCALE,
+    w: ENEMY_BASE * SCALE,
+    h: ENEMY_BASE * SCALE
   });
 }
 
 function spawnCoin() {
+  const SCALE = getScale();
+  const COIN_BASE = 55;
+
   coins.push({
     x: canvas.width + Math.random() * 600,
-    y: getGroundY() - (isMobile ? 300 : 240) * SCALE,
-    size: 55 * SCALE
+    y: getGroundY() - 220 * SCALE,
+    size: COIN_BASE * SCALE
   });
 }
 
