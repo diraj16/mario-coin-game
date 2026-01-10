@@ -55,9 +55,9 @@ let bestScore = localStorage.getItem("bestScore") || 0;
 
 document.getElementById("bestScore").innerText = bestScore;
 
-let baseSpeed = 6;
+let baseSpeed = isMobile ? 6 : 8;
 let currentSpeed = baseSpeed;
-let maxSpeed = 14;
+let maxSpeed = isMobile ? 14 : 18;
 let jumpBoost = 4;
 let gameRunning = true;
 
