@@ -55,9 +55,9 @@ let bestScore = localStorage.getItem("bestScore") || 0;
 
 document.getElementById("bestScore").innerText = bestScore;
 
-let baseSpeed = isMobile ? 6 : 8;
+let baseSpeed = isMobile ? 6 : 9;
 let currentSpeed = baseSpeed;
-let maxSpeed = isMobile ? 14 : 18;
+let maxSpeed = isMobile ? 14 : 19;
 let jumpBoost = 4;
 let gameRunning = true;
 
@@ -145,9 +145,9 @@ function hit(a, b) {
 function update() {
   if (!gameRunning) return;
 
-  if (score % 5 === 0 && score !== 0 && currentSpeed < maxSpeed) {
-    currentSpeed += 0.01;
-  }
+if (score !== 0 && score % 5 === 0 && currentSpeed < maxSpeed) {
+  currentSpeed += isMobile ? 0.01 : 0.02;
+}
 
   const speed = player.grounded
     ? currentSpeed
