@@ -73,7 +73,7 @@ document.getElementById("bestScore").innerText = bestScore;
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
-let jumpBoost = 4;
+let jumpBoost = 5;
 
 let gameRunning = true;
 let canRestart = false;
