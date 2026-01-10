@@ -63,7 +63,7 @@ document.getElementById("bestScore").innerText = bestScore;
 const SCALE = isMobile ? 1.1 : 1.3;
 
 /* GROUND */
-const groundY = canvas.height - (isMobile ? 90 : 80);
+const groundY = canvas.height - (isMobile ? 95 : 70);
 
 /* PLAYER */
 let player;
