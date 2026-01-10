@@ -4,21 +4,14 @@ const ctx = canvas.getContext("2d");
 /* DEVICE */
 const isMobile = window.innerWidth < 768;
 
-let fullscreenEntered = false;
-
-function enterFullscreenDesktop() {
-  if (!isMobile && !fullscreenEntered) {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-      fullscreenEntered = true;
-    }
-  }
+/* CANVAS SIZE */
+if (isMobile) {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight * 0.75;
+} else {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
-
-
-/* CANVAS SIZE (KEEP SIMPLE) */
-canvas.width = isMobile ? window.innerWidth : 1200;
-canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
 
 /* IMAGES */
 const bgImg = new Image();
@@ -58,24 +51,19 @@ gameOverMusic.volume = 0.6;
 /* GAME STATE */
 let score = 0;
 let lives = 1;
+let bestScore = localStorage.getItem("bestScore") || 0;
+
+document.getElementById("bestScore").innerText = bestScore;
+
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
 let jumpBoost = 4;
 let gameRunning = true;
-let canRestart = false;
 
-/* BEST SCORE */
-let bestScore = localStorage.getItem("bestScore") || 0;
-document.getElementById("bestScore").innerText = bestScore;
-
-/* ===== MOBILE FIXES HERE ===== */
-
-/* SCALE — MOBILE SMALLER */
+/* SCALE & GROUND */
 const SCALE = isMobile ? 1.1 : 1.3;
-
-/* GROUND */
-const groundY = canvas.height - (isMobile ? 95 : 70);
+const groundY = canvas.height - (isMobile ? 90 : 70);
 
 /* PLAYER */
 let player;
@@ -94,22 +82,14 @@ let enemySpawnInterval = 120;
 
 /* INPUT */
 document.addEventListener("touchstart", jump);
-
-document.addEventListener("mousedown", () => {
-  enterFullscreenDesktop(); // 💻 fullscreen only on Windows
-  jump();
-});
-
+document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
-  enterFullscreenDesktop(); // 💻 fullscreen only on Windows
   if (e.key === "ArrowUp" || e.key === " ") jump();
 });
 
-
-/* PLAYER INIT */
+/* INIT PLAYER */
 function initPlayer() {
   player = {
-    // ✅ MOBILE LEFT CORNER
     x: isMobile ? 20 : 120,
     y: groundY - 110 * SCALE,
     w: 110 * SCALE,
@@ -130,7 +110,7 @@ function jump() {
   }
 }
 
-/* SPAWN ENEMY */
+/* SPAWN */
 function spawnEnemy() {
   enemies.push({
     x: canvas.width + 50,
@@ -140,7 +120,6 @@ function spawnEnemy() {
   });
 }
 
-/* SPAWN COIN */
 function spawnCoin() {
   coins.push({
     x: canvas.width + Math.random() * 600,
@@ -150,7 +129,7 @@ function spawnCoin() {
 }
 
 /* COLLISION */
-function rectHit(a, b) {
+function hit(a, b) {
   return (
     a.x < b.x + b.w &&
     a.x + a.w > b.x &&
@@ -163,7 +142,7 @@ function rectHit(a, b) {
 function update() {
   if (!gameRunning) return;
 
-  if (score !== 0 && score % 5 === 0 && currentSpeed < maxSpeed) {
+  if (score % 5 === 0 && score !== 0 && currentSpeed < maxSpeed) {
     currentSpeed += 0.01;
   }
 
@@ -198,8 +177,8 @@ function update() {
   if (Math.random() < 0.01) spawnCoin();
 
   if (player.grounded) {
-    enemies.forEach((enemy, i) => {
-      if (rectHit(player, enemy)) {
+    enemies.forEach((e, i) => {
+      if (hit(player, e)) {
         lives--;
         document.getElementById("lives").innerText = lives;
         enemies.splice(i, 1);
@@ -208,12 +187,12 @@ function update() {
     });
   }
 
-  coins.forEach((coin, i) => {
+  coins.forEach((c, i) => {
     if (
-      player.x < coin.x + coin.size &&
-      player.x + player.w > coin.x &&
-      player.y < coin.y + coin.size &&
-      player.y + player.h > coin.y
+      player.x < c.x + c.size &&
+      player.x + player.w > c.x &&
+      player.y < c.y + c.size &&
+      player.y + player.h > c.y
     ) {
       score++;
       document.getElementById("score").innerText = score;
@@ -242,9 +221,9 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+/* GAME OVER */
 function endGame() {
   gameRunning = false;
-  canRestart = false;
 
   gameOverMusic.currentTime = 0;
   gameOverMusic.play();
@@ -258,18 +237,12 @@ function endGame() {
   document.getElementById("bestScore").innerText = bestScore;
   document.getElementById("gameOverScreen").style.display = "block";
 
-  // ✅ AUTO RESTART AFTER MUSIC
-  gameOverMusic.onended = () => {
+  setTimeout(() => {
     restartGame();
-  };
+  }, (gameOverMusic.duration || 3) * 1000);
 }
 
-
 /* RESTART */
-document.addEventListener("click", () => {
-  if (!gameRunning && canRestart) restartGame();
-});
-
 function restartGame() {
   score = 0;
   lives = 1;
