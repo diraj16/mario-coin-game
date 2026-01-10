@@ -4,6 +4,18 @@ const ctx = canvas.getContext("2d");
 /* DEVICE */
 const isMobile = window.innerWidth < 768;
 
+let fullscreenEntered = false;
+
+function enterFullscreenDesktop() {
+  if (!isMobile && !fullscreenEntered) {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen();
+      fullscreenEntered = true;
+    }
+  }
+}
+
+
 /* CANVAS SIZE (KEEP SIMPLE) */
 canvas.width = isMobile ? window.innerWidth : 1200;
 canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
@@ -82,10 +94,17 @@ let enemySpawnInterval = 120;
 
 /* INPUT */
 document.addEventListener("touchstart", jump);
-document.addEventListener("mousedown", jump);
+
+document.addEventListener("mousedown", () => {
+  enterFullscreenDesktop(); // 💻 fullscreen only on Windows
+  jump();
+});
+
 document.addEventListener("keydown", e => {
+  enterFullscreenDesktop(); // 💻 fullscreen only on Windows
   if (e.key === "ArrowUp" || e.key === " ") jump();
 });
+
 
 /* PLAYER INIT */
 function initPlayer() {
@@ -223,10 +242,11 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* GAME OVER */
 function endGame() {
   gameRunning = false;
-  canRestart = true;
+  canRestart = false;
+
+  gameOverMusic.currentTime = 0;
   gameOverMusic.play();
 
   if (score > bestScore) {
@@ -237,7 +257,13 @@ function endGame() {
   document.getElementById("finalScore").innerText = score;
   document.getElementById("bestScore").innerText = bestScore;
   document.getElementById("gameOverScreen").style.display = "block";
+
+  // ✅ AUTO RESTART AFTER MUSIC
+  gameOverMusic.onended = () => {
+    restartGame();
+  };
 }
+
 
 /* RESTART */
 document.addEventListener("click", () => {
