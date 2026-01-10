@@ -60,10 +60,10 @@ document.getElementById("bestScore").innerText = bestScore;
 /* ===== MOBILE FIXES HERE ===== */
 
 /* SCALE — MOBILE SMALLER */
-const SCALE = isMobile ? 1.4 : 1.3;
+const SCALE = isMobile ? 1.2 : 1.3;
 
 /* GROUND */
-const groundY = canvas.height - (isMobile ? 140 : 120);
+const groundY = canvas.height - (isMobile ? 180 : 90);
 
 /* PLAYER */
 let player;
@@ -91,7 +91,7 @@ document.addEventListener("keydown", e => {
 function initPlayer() {
   player = {
     // ✅ MOBILE LEFT CORNER
-    x: isMobile ? 40 : 120,
+    x: isMobile ? 30 : 120,
     y: groundY - 110 * SCALE,
     w: 110 * SCALE,
     h: 110 * SCALE,
