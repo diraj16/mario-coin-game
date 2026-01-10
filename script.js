@@ -1,31 +1,14 @@
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-/* ===============================
-   DEVICE
-================================ */
+/* DEVICE */
 const isMobile = window.innerWidth < 768;
 
-/* ===============================
-   CANVAS SIZE LOGIC (KEY PART)
-================================ */
-function resizeCanvas() {
-  if (isMobile) {
-    // 📱 MOBILE → fixed comfortable size
-    canvas.width = 360;
-    canvas.height = 640;
-  } else {
-    // 💻 DESKTOP → fullscreen
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-}
-resizeCanvas();
-window.addEventListener("resize", resizeCanvas);
+/* CANVAS SIZE (KEEP SIMPLE) */
+canvas.width = isMobile ? window.innerWidth : 1200;
+canvas.height = isMobile ? window.innerHeight * 0.75 : 600;
 
-/* ===============================
-   IMAGES
-================================ */
+/* IMAGES */
 const bgImg = new Image();
 bgImg.src = "assets/background.png";
 
@@ -38,9 +21,7 @@ enemyImg.src = "assets/enemy.png";
 const coinImg = new Image();
 coinImg.src = "assets/coin.png";
 
-/* ===============================
-   AUDIO
-================================ */
+/* AUDIO */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function jumpSound() {
@@ -60,64 +41,67 @@ function coinSound() {
 }
 
 const gameOverMusic = new Audio("assets/gameover.mp3");
+gameOverMusic.volume = 0.6;
 
-/* ===============================
-   GAME STATE
-================================ */
+/* GAME STATE */
 let score = 0;
 let lives = 1;
-let bestScore = localStorage.getItem("bestScore") || 0;
-
-document.getElementById("bestScore").innerText = bestScore;
-
 let baseSpeed = 6;
 let currentSpeed = baseSpeed;
 let maxSpeed = 14;
-let jumpBoost = 5;
-
+let jumpBoost = 4;
 let gameRunning = true;
 let canRestart = false;
 
-/* ===============================
-   SCALE & GROUND
-================================ */
-const SCALE = isMobile ? 2.2 : 1.3;
-const groundY = canvas.height - (isMobile ? 160 : 120);
+/* BEST SCORE */
+let bestScore = localStorage.getItem("bestScore") || 0;
+document.getElementById("bestScore").innerText = bestScore;
 
-/* ===============================
-   PLAYER
-================================ */
+/* ===== MOBILE FIXES HERE ===== */
+
+/* SCALE — MOBILE SMALLER */
+const SCALE = isMobile ? 1.4 : 1.3;
+
+/* GROUND */
+const groundY = canvas.height - (isMobile ? 140 : 120);
+
+/* PLAYER */
 let player;
-const gravity = isMobile ? 1.7 : 1.5;
+const gravity = isMobile ? 1.6 : 1.5;
 
-function initPlayer() {
-  player = {
-    x: isMobile ? 80 : canvas.width * 0.15,
-    y: groundY - 120 * SCALE,
-    w: 120 * SCALE,
-    h: 120 * SCALE,
-    dy: 0,
-    grounded: true,
-    jumpPower: -24 * SCALE
-  };
-}
-
-/* ===============================
-   OBJECTS
-================================ */
-let enemies = [];
-let coins = [];
+/* BACKGROUND */
 let bgX = 0;
 
-/* ===============================
-   INPUT
-================================ */
+/* OBJECTS */
+let enemies = [];
+let coins = [];
+
+/* ENEMY TIMER */
+let enemySpawnTimer = 0;
+let enemySpawnInterval = 120;
+
+/* INPUT */
 document.addEventListener("touchstart", jump);
 document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" || e.key === " ") jump();
 });
 
+/* PLAYER INIT */
+function initPlayer() {
+  player = {
+    // ✅ MOBILE LEFT CORNER
+    x: isMobile ? 40 : 120,
+    y: groundY - 110 * SCALE,
+    w: 110 * SCALE,
+    h: 110 * SCALE,
+    dy: 0,
+    grounded: true,
+    jumpPower: -22 * SCALE
+  };
+}
+
+/* JUMP */
 function jump() {
   if (!gameRunning) return;
   if (player.grounded) {
@@ -127,33 +111,27 @@ function jump() {
   }
 }
 
-/* ===============================
-   SPAWN
-================================ */
-let enemyTimer = 0;
-let enemyInterval = 120;
-
+/* SPAWN ENEMY */
 function spawnEnemy() {
   enemies.push({
     x: canvas.width + 50,
-    y: groundY - 90 * SCALE,
-    w: 90 * SCALE,
-    h: 90 * SCALE
+    y: groundY - 80 * SCALE,
+    w: 80 * SCALE,
+    h: 80 * SCALE
   });
 }
 
+/* SPAWN COIN */
 function spawnCoin() {
   coins.push({
     x: canvas.width + Math.random() * 600,
-    y: groundY - 220 * SCALE,
-    size: 55 * SCALE
+    y: groundY - 190 * SCALE,
+    size: 45 * SCALE
   });
 }
 
-/* ===============================
-   COLLISION
-================================ */
-function hit(a, b) {
+/* COLLISION */
+function rectHit(a, b) {
   return (
     a.x < b.x + b.w &&
     a.x + a.w > b.x &&
@@ -162,17 +140,17 @@ function hit(a, b) {
   );
 }
 
-/* ===============================
-   UPDATE
-================================ */
+/* UPDATE */
 function update() {
   if (!gameRunning) return;
 
-  if (score % 5 === 0 && score !== 0 && currentSpeed < maxSpeed) {
+  if (score !== 0 && score % 5 === 0 && currentSpeed < maxSpeed) {
     currentSpeed += 0.01;
   }
 
-  let speed = player.grounded ? currentSpeed : currentSpeed + jumpBoost;
+  const speed = player.grounded
+    ? currentSpeed
+    : currentSpeed + jumpBoost;
 
   bgX -= speed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
@@ -192,17 +170,17 @@ function update() {
   coins.forEach(c => c.x -= speed);
   coins = coins.filter(c => c.x + c.size > 0);
 
-  enemyTimer++;
-  if (enemyTimer >= enemyInterval) {
+  enemySpawnTimer++;
+  if (enemySpawnTimer >= enemySpawnInterval) {
     spawnEnemy();
-    enemyTimer = 0;
+    enemySpawnTimer = 0;
   }
 
   if (Math.random() < 0.01) spawnCoin();
 
   if (player.grounded) {
-    enemies.forEach((e, i) => {
-      if (hit(player, e)) {
+    enemies.forEach((enemy, i) => {
+      if (rectHit(player, enemy)) {
         lives--;
         document.getElementById("lives").innerText = lives;
         enemies.splice(i, 1);
@@ -211,12 +189,12 @@ function update() {
     });
   }
 
-  coins.forEach((c, i) => {
+  coins.forEach((coin, i) => {
     if (
-      player.x < c.x + c.size &&
-      player.x + player.w > c.x &&
-      player.y < c.y + c.size &&
-      player.y + player.h > c.y
+      player.x < coin.x + coin.size &&
+      player.x + player.w > coin.x &&
+      player.y < coin.y + coin.size &&
+      player.y + player.h > coin.y
     ) {
       score++;
       document.getElementById("score").innerText = score;
@@ -226,9 +204,7 @@ function update() {
   });
 }
 
-/* ===============================
-   DRAW
-================================ */
+/* DRAW */
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -240,22 +216,17 @@ function draw() {
   coins.forEach(c => ctx.drawImage(coinImg, c.x, c.y, c.size, c.size));
 }
 
-/* ===============================
-   LOOP
-================================ */
+/* LOOP */
 function loop() {
   update();
   draw();
   requestAnimationFrame(loop);
 }
 
-/* ===============================
-   GAME OVER
-================================ */
+/* GAME OVER */
 function endGame() {
   gameRunning = false;
   canRestart = true;
-
   gameOverMusic.play();
 
   if (score > bestScore) {
@@ -268,20 +239,18 @@ function endGame() {
   document.getElementById("gameOverScreen").style.display = "block";
 }
 
-/* ===============================
-   RESTART
-================================ */
+/* RESTART */
 document.addEventListener("click", () => {
-  if (!gameRunning && canRestart) restart();
+  if (!gameRunning && canRestart) restartGame();
 });
 
-function restart() {
+function restartGame() {
   score = 0;
   lives = 1;
   currentSpeed = baseSpeed;
   enemies = [];
   coins = [];
-  enemyTimer = 0;
+  enemySpawnTimer = 0;
   bgX = 0;
 
   document.getElementById("score").innerText = score;
@@ -292,9 +261,7 @@ function restart() {
   gameRunning = true;
 }
 
-/* ===============================
-   START
-================================ */
+/* START */
 bgImg.onload = () => {
   initPlayer();
   loop();
