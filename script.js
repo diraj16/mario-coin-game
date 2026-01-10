@@ -63,7 +63,7 @@ let gameRunning = true;
 
 /* SCALE & GROUND */
 const SCALE = isMobile ? 1.1 : 1.7;
-const groundY = canvas.height - (isMobile ? 90 : 70);
+const groundY = canvas.height - (isMobile ? 85 : 140);
 
 /* PLAYER */
 let player;
@@ -91,12 +91,12 @@ document.addEventListener("keydown", e => {
 function initPlayer() {
   player = {
     x: isMobile ? 20 : 120,
-    y: groundY - (isMobile ? 120 : 150) * SCALE,
+    y: groundY - (isMobile ? 110 : 150) * SCALE,
     w: 110 * SCALE,
     h: 110 * SCALE,
     dy: 0,
     grounded: true,
-    jumpPower: -(isMobile ? 22 : 28) * SCALE
+    jumpPower: -22 * SCALE
   };
 }
 
