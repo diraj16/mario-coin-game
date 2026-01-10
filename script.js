@@ -64,7 +64,7 @@ let gameRunning = true;
 /* SCALE & GROUND */
 const SCALE = isMobile ? 1.1 : 1.7;
 // Grass is ~78% down your background image
-const GROUND_RATIO = 0.78;
+const GROUND_RATIO = 0.8;
 const groundY = canvas.height * GROUND_RATIO;
 
 
