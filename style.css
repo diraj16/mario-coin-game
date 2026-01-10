@@ -2,7 +2,7 @@ body {
   margin: 0;
   background: black;
   font-family: Arial, sans-serif;
-  text-align: center;
+  overflow: hidden;
 }
 
 /* HUD */
@@ -10,6 +10,7 @@ body {
   position: fixed;
   top: 10px;
   width: 100%;
+  text-align: center;
   color: white;
   font-size: 20px;
   z-index: 10;
@@ -18,18 +19,19 @@ body {
 
 /* Canvas */
 canvas {
-  background: black;
   display: block;
-  margin: 60px auto 0 auto;
+  margin: 50px auto 0 auto;
+  background: black;
 }
 
-/* Game Over */
+/* Game Over Screen */
 #gameOverScreen {
   display: none;
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.8);
   color: white;
+  text-align: center;
   padding-top: 35vh;
   font-size: 24px;
   z-index: 20;
