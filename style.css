@@ -1,50 +1,36 @@
-/* ===== GLOBAL ===== */
 body {
   margin: 0;
   background: black;
-  overflow: hidden;
   font-family: Arial, sans-serif;
-  touch-action: manipulation;
+  text-align: center;
 }
 
-/* ===== CANVAS (FULLSCREEN) ===== */
-canvas {
-  position: fixed;
-  inset: 0;
-  display: block;
-}
-
-/* ===== HUD ===== */
+/* HUD */
 #hud {
   position: fixed;
-  top: 12px;
+  top: 10px;
   width: 100%;
-  text-align: center;
   color: white;
-  font-size: 22px;
-  z-index: 5;
+  font-size: 20px;
+  z-index: 10;
   pointer-events: none;
 }
 
-/* ===== GAME OVER SCREEN ===== */
+/* Canvas */
+canvas {
+  background: black;
+  display: block;
+  margin: 60px auto 0 auto;
+}
+
+/* Game Over */
 #gameOverScreen {
+  display: none;
   position: fixed;
   inset: 0;
-  display: none;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0,0,0,0.8);
   color: white;
-  text-align: center;
   padding-top: 35vh;
   font-size: 24px;
-  z-index: 10;
-}
-
-#gameOverScreen h1 {
-  margin-bottom: 10px;
-  font-size: 40px;
-}
-
-#gameOverScreen p {
-  margin: 8px 0;
-  opacity: 0.9;
+  z-index: 20;
 }
