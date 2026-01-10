@@ -60,10 +60,10 @@ document.getElementById("bestScore").innerText = bestScore;
 /* ===== MOBILE FIXES HERE ===== */
 
 /* SCALE — MOBILE SMALLER */
-const SCALE = isMobile ? 1.2 : 1.3;
+const SCALE = isMobile ? 1.1 : 1.3;
 
 /* GROUND */
-const groundY = canvas.height - (isMobile ? 90 : 80);
+const groundY = canvas.height - (isMobile ? 90 : 120);
 
 /* PLAYER */
 let player;
