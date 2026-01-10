@@ -2,14 +2,20 @@ const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 /* ===============================
-   FULLSCREEN CANVAS
+   DEVICE DETECTION
+================================ */
+const isMobile = window.innerWidth < 768;
+
+/* ===============================
+   CANVAS SIZE (IMPORTANT PART)
 ================================ */
 function resizeCanvas() {
-  if (window.innerWidth < 768) {
-    // force desktop resolution on mobile
-    canvas.width = 1024;
-    canvas.height = 576;
+  if (isMobile) {
+    // MOBILE → fixed comfortable size (like before)
+    canvas.width = 360;
+    canvas.height = 640;
   } else {
+    // DESKTOP → fullscreen
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
@@ -53,7 +59,6 @@ function coinSound() {
   o.stop(audioCtx.currentTime + 0.1);
 }
 
-/* GAME OVER MUSIC */
 const gameOverMusic = new Audio("assets/gameover.mp3");
 gameOverMusic.volume = 0.6;
 
@@ -78,13 +83,12 @@ document.getElementById("bestScore").innerText = bestScore;
 /* ===============================
    SCALE & GROUND
 ================================ */
-const BASE_HEIGHT = 800;
+const BASE_HEIGHT = 640;
 
 function getScale() {
   return Math.min(canvas.height / BASE_HEIGHT, 1.4);
 }
 
-/* Ground slightly lower (safe) */
 function getGroundY() {
   return canvas.height * 0.8;
 }
@@ -100,8 +104,7 @@ function initPlayer() {
   const PLAYER_BASE = 140;
 
   player = {
-    // ✅ ONLY MOBILE LEFT SHIFT (SAFE)
-    x: canvas.width < 768 ? 80 : canvas.width * 0.15,
+    x: isMobile ? 70 : canvas.width * 0.15,
     y: getGroundY() - PLAYER_BASE * SCALE,
     w: PLAYER_BASE * SCALE,
     h: PLAYER_BASE * SCALE,
@@ -126,7 +129,7 @@ let coins = [];
    ENEMY TIMER
 ================================ */
 let enemySpawnTimer = 0;
-let enemySpawnInterval = 120;
+let enemySpawnInterval = isMobile ? 140 : 120;
 
 /* ===============================
    INPUT
@@ -136,17 +139,6 @@ document.addEventListener("mousedown", jump);
 document.addEventListener("keydown", e => {
   if (e.key === "ArrowUp" || e.key === " ") jump();
 });
-
-/* ENTER FULLSCREEN ON FIRST TAP */
-document.addEventListener(
-  "touchstart",
-  () => {
-    if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen();
-    }
-  },
-  { once: true }
-);
 
 function jump() {
   if (!gameRunning) return;
@@ -209,11 +201,9 @@ function update() {
     ? currentSpeed
     : currentSpeed + jumpBoost;
 
-  /* BACKGROUND MOVE */
   bgX -= effectiveSpeed * 0.5;
   if (bgX <= -canvas.width) bgX = 0;
 
-  /* PLAYER PHYSICS */
   player.dy += gravity;
   player.y += player.dy;
 
@@ -223,15 +213,12 @@ function update() {
     player.grounded = true;
   }
 
-  /* MOVE ENEMIES */
   enemies.forEach(e => (e.x -= effectiveSpeed));
   enemies = enemies.filter(e => e.x + e.w > 0);
 
-  /* MOVE COINS */
   coins.forEach(c => (c.x -= effectiveSpeed));
   coins = coins.filter(c => c.x + c.size > 0);
 
-  /* SPAWN */
   enemySpawnTimer++;
   if (enemySpawnTimer >= enemySpawnInterval) {
     spawnEnemy();
@@ -240,7 +227,6 @@ function update() {
 
   if (Math.random() < 0.01) spawnCoin();
 
-  /* ENEMY COLLISION */
   if (player.grounded) {
     enemies.forEach((enemy, i) => {
       if (rectHit(player, enemy)) {
@@ -252,7 +238,6 @@ function update() {
     });
   }
 
-  /* COIN COLLISION */
   coins.forEach((coin, i) => {
     if (
       player.x < coin.x + coin.size &&
@@ -274,7 +259,6 @@ function update() {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // ✅ BACKGROUND ALWAYS VISIBLE
   ctx.drawImage(bgImg, bgX, 0, canvas.width, canvas.height);
   ctx.drawImage(bgImg, bgX + canvas.width, 0, canvas.width, canvas.height);
 
