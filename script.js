@@ -51,7 +51,7 @@ gameOverMusic.volume = 0.6;
 /* GAME STATE */
 let score = 0;
 let lives = 1;
-let bestScore = localStorage.getItem("bestScore") || 0;
+let bestScore = parseInt(localStorage.getItem("highScore")) || 0;
 
 document.getElementById("bestScore").innerText = bestScore;
 
@@ -231,14 +231,14 @@ function endGame() {
   gameOverMusic.currentTime = 0;
   gameOverMusic.play();
 
-  if (score > bestScore) {
-    bestScore = score;
-    localStorage.setItem("bestScore", bestScore);
-  }
+if (score > bestScore) {
+  bestScore = score;
+  localStorage.setItem("highScore", bestScore);
+}
 
-  document.getElementById("finalScore").innerText = score;
-  document.getElementById("bestScore").innerText = bestScore;
-  document.getElementById("gameOverScreen").style.display = "block";
+document.getElementById("finalScore").innerText = score;
+document.getElementById("finalBestScore").innerText = bestScore;
+document.getElementById("gameOverScreen").style.display = "block";
 
   setTimeout(() => {
     restartGame();
