@@ -58,7 +58,7 @@ document.getElementById("bestScore").innerText = bestScore;
 let baseSpeed = isMobile ? 6 : 9;
 let currentSpeed = baseSpeed;
 let maxSpeed = isMobile ? 14 : 19;
-let jumpBoost = 4;
+let jumpBoost = 3;
 let gameRunning = true;
 
 /* SCALE & GROUND */
