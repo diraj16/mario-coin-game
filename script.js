@@ -726,65 +726,15 @@ function draw() {
       ctx.closePath();
     }
 
-    if (isMobile) {
-      // ── MOBILE: black drop shadow + white outline only ──
-
-      // 1. Black drop shadow
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.8)";
-      ctx.shadowBlur  = 18;
-      ctx.shadowOffsetX = 4;
-      ctx.shadowOffsetY = 5;
-      roundedPath();
-      ctx.strokeStyle = "rgba(0,0,0,0.01)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.restore();
-
-      // 2. White outline stroke
-      ctx.save();
-      roundedPath();
-      ctx.strokeStyle = "rgba(255,255,255,0.95)";
-      ctx.lineWidth = 6;
-      ctx.stroke();
-      ctx.restore();
-
-      // 3. Draw player image clipped
-      ctx.save();
-      roundedPath();
-      ctx.clip();
-      if (playerImg.complete && playerImg.naturalWidth > 0) {
-        ctx.drawImage(playerImg, rx, ry, rw, rh);
-      } else {
-        ctx.fillStyle = "#44aa44";
-        ctx.fill();
-      }
-      ctx.restore();
-
+    // Draw image — square corners, clean, no clip artifacts
+    ctx.save();
+    if (playerImg.complete && playerImg.naturalWidth > 0) {
+      ctx.drawImage(playerImg, rx, ry, rw, rh);
     } else {
-      // ── DESKTOP: subtle drop shadow only ──
-      ctx.save();
-      ctx.shadowColor = "rgba(0,0,0,0.55)";
-      ctx.shadowBlur  = 20;
-      ctx.shadowOffsetX = 3;
-      ctx.shadowOffsetY = 4;
-      roundedPath();
-      ctx.fillStyle = "rgba(0,0,0,0.01)";
-      ctx.fill();
-      ctx.restore();
-
-      // Draw image clipped
-      ctx.save();
-      roundedPath();
-      ctx.clip();
-      if (playerImg.complete && playerImg.naturalWidth > 0) {
-        ctx.drawImage(playerImg, rx, ry, rw, rh);
-      } else {
-        ctx.fillStyle = "#44aa44";
-        ctx.fill();
-      }
-      ctx.restore();
+      ctx.fillStyle = "#44aa44";
+      ctx.fillRect(rx, ry, rw, rh);
     }
+    ctx.restore();
 
     // Speed lines when in air
     if (!player.grounded) {
