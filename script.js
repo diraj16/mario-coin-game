@@ -154,24 +154,24 @@ let bgScroll = 0;
 // ── INIT PLAYER ──
 function initPlayer() {
   groundY = canvas.height * GROUND_RATIO;
-  // Bigger size — clearly visible on both mobile and desktop
-  const pw = isMobile ? 88 : 110;
-  const ph = isMobile ? 100 : 130;
+  const pw = isMobile ? 88 : 160;   // laptop much bigger
+  const ph = isMobile ? 100 : 180;
   player = {
-    x: isMobile ? 18 : 80,        // pushed left so obstacles have room
+    x: isMobile ? 18 : 80,
     y: groundY - ph,
     w: pw,
     h: ph,
     dy: 0,
     grounded: true,
     jumpsLeft: 2,
-    jumpPower: isMobile ? -22 : -24,
+    jumpPower: isMobile ? -22 : -28,
   };
 }
 
 // ── PARTICLES ──
 function burst(x, y, color, n=10, spread=7) {
-  for (let i = 0; i < n; i++) {
+  const count = isMobile ? Math.ceil(n * 0.5) : n;
+  for (let i = 0; i < count; i++) {
     const angle = Math.random() * Math.PI * 2;
     const spd   = Math.random() * spread + 1;
     particles.push({
@@ -294,14 +294,15 @@ function updateHUD() {
 function update() {
   if (!gameRunning || paused) return;
 
-  spd = Math.min(BASE_SPEED + (level - 1) * 1.8, MAX_SPEED);
+  spd = Math.min(BASE_SPEED + (level - 1) * 1.5, MAX_SPEED);
 
   // BG scroll
-  bgScroll = (bgScroll + spd * 0.5);
+  bgScroll += spd * 0.5;
 
-  // Gravity
-  const gravity = isMobile ? 1.2 : 1.3;
+  // Gravity — tuned per device for smooth feel
+  const gravity = isMobile ? 0.9 : 1.1;
   player.dy += gravity;
+  player.dy  = Math.min(player.dy, 22); // cap fall speed
   player.y  += player.dy;
 
   if (player.y + player.h >= groundY) {
@@ -406,7 +407,7 @@ function loseLife() {
   SFX.hurt();
   burst(player.x + player.w/2, player.y + player.h/2, C.neon2, 16, 9);
   flashTimer = 14;
-  shakeAmt   = 12;
+  shakeAmt   = isMobile ? 5 : 12;
   invincible = true;
   invTimer   = 100;
   combo      = 0;
@@ -417,7 +418,7 @@ function loseLife() {
 function drawGlow(fn, color, blur=20) {
   ctx.save();
   ctx.shadowColor = color;
-  ctx.shadowBlur  = blur;
+  ctx.shadowBlur  = isMobile ? Math.min(blur, 8) : blur;
   fn();
   ctx.restore();
 }
@@ -707,17 +708,16 @@ function draw() {
   const blink = invincible && Math.floor(invTimer / 6) % 2 === 0;
   if (!blink) {
     ctx.save();
+    const rx = player.x, ry = player.y, rw = player.w, rh = player.h;
 
-    // Player photo
     if (playerImg.complete && playerImg.naturalWidth > 0) {
-      // Rounded clip for photo
+      // Clean rounded clip — no border at all
       ctx.save();
       ctx.beginPath();
-      const rx = player.x, ry = player.y, rw = player.w, rh = player.h;
-      const radius = 14;
+      const radius = isMobile ? 12 : 18;
       ctx.moveTo(rx + radius, ry);
       ctx.lineTo(rx + rw - radius, ry);
-      ctx.quadraticCurveTo(rx+rw, ry, rx+rw, ry+radius);
+      ctx.quadraticCurveTo(rx+rw, ry,   rx+rw, ry+radius);
       ctx.lineTo(rx+rw, ry+rh-radius);
       ctx.quadraticCurveTo(rx+rw, ry+rh, rx+rw-radius, ry+rh);
       ctx.lineTo(rx+radius, ry+rh);
@@ -728,41 +728,22 @@ function draw() {
       ctx.clip();
       ctx.drawImage(playerImg, rx, ry, rw, rh);
       ctx.restore();
-
-      // Green border around player
-      drawGlow(() => {
-        ctx.strokeStyle = "#44ff44";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(rx + radius, ry);
-        ctx.lineTo(rx + rw - radius, ry);
-        ctx.quadraticCurveTo(rx+rw, ry, rx+rw, ry+radius);
-        ctx.lineTo(rx+rw, ry+rh-radius);
-        ctx.quadraticCurveTo(rx+rw, ry+rh, rx+rw-radius, ry+rh);
-        ctx.lineTo(rx+radius, ry+rh);
-        ctx.quadraticCurveTo(rx, ry+rh, rx, ry+rh-radius);
-        ctx.lineTo(rx, ry+radius);
-        ctx.quadraticCurveTo(rx, ry, rx+radius, ry);
-        ctx.closePath();
-        ctx.stroke();
-      }, "#44ff44", 10);
-
     } else {
-      // Fallback box if image not loaded
+      // Fallback if image missing
       ctx.fillStyle = "#44aa44";
-      ctx.fillRect(player.x, player.y, player.w, player.h);
+      ctx.fillRect(rx, ry, rw, rh);
     }
 
-    // Jump speed lines (green)
+    // Subtle speed lines when jumping
     if (!player.grounded) {
-      ctx.strokeStyle = "rgba(60,200,60,0.5)";
+      ctx.strokeStyle = "rgba(60,200,60,0.4)";
       ctx.lineWidth = 2;
       for (let i = 0; i < 4; i++) {
-        const ly = player.y + player.h * (0.2 + i * 0.2);
-        const len = 18 + i * 7;
+        const ly = ry + rh * (0.2 + i * 0.2);
+        const len = 16 + i * 6;
         ctx.beginPath();
-        ctx.moveTo(player.x - 4, ly);
-        ctx.lineTo(player.x - 4 - len, ly);
+        ctx.moveTo(rx - 4, ly);
+        ctx.lineTo(rx - 4 - len, ly);
         ctx.stroke();
       }
     }
