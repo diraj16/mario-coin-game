@@ -164,7 +164,7 @@ function initPlayer() {
     dy:         0,
     grounded:   true,
     jumpsLeft:  2,
-    jumpPower:  isMobile ? -16 : -20,  // mobile jump much lower
+    jumpPower:  isMobile ? -22 : -26,  // mobile jump much lower
   };
 }
 
@@ -300,7 +300,7 @@ function update() {
   bgScroll += spd * 0.5;
 
   // Gravity — laptop floats slow, mobile snappy
-  const gravity = isMobile ? 1.4 : 1.0;
+  const gravity = isMobile ? 1.1 : 1.2;
   player.dy += gravity;
   player.dy  = Math.min(player.dy, isMobile ? 18 : 22);
   player.y  += player.dy;
@@ -727,20 +727,21 @@ function draw() {
     }
 
     if (isMobile) {
-      // ── MOBILE: thick white outline + heavy drop shadow ──
+      // ── MOBILE: black drop shadow + white outline only ──
 
-      // 1. Big black drop shadow
+      // 1. Black drop shadow
       ctx.save();
       ctx.shadowColor = "rgba(0,0,0,0.8)";
       ctx.shadowBlur  = 18;
       ctx.shadowOffsetX = 4;
       ctx.shadowOffsetY = 5;
       roundedPath();
-      ctx.fillStyle = "#fff";
-      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.01)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
       ctx.restore();
 
-      // 2. White outline stroke (3px each side = 6px total visible)
+      // 2. White outline stroke
       ctx.save();
       roundedPath();
       ctx.strokeStyle = "rgba(255,255,255,0.95)";
