@@ -2,35 +2,41 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Charan The Runner 🔥</title>
+  <title>Charan The Runner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <!-- START SCREEN -->
 <div id="startScreen">
+  <div class="stars" id="stars"></div>
   <div class="start-content">
-    <div class="title-wrap">
-      <h1 class="game-title">CHARAN<br><span>THE RUNNER</span></h1>
+    <div class="logo-wrap">
+      <div class="logo-sub">⚡ THE LEGEND ⚡</div>
+      <h1 class="logo">CHARAN</h1>
+      <h2 class="logo-runner">THE RUNNER</h2>
     </div>
-    <p class="subtitle">Jump. Dodge. Survive. 🔥</p>
-    <button id="startBtn">▶ PLAY NOW</button>
-    <p class="hint">TAP / CLICK / SPACE to Jump</p>
+    <div class="start-desc">Dodge traps. Collect coins. Survive the chaos.</div>
+    <button id="startBtn" class="btn-start">▶ &nbsp;START GAME</button>
+    <div class="controls-hint">
+      <span>⬆ SPACE</span><span>/ TAP</span><span>to jump</span>
+      <span style="margin-left:16px">P</span><span>to pause</span>
+    </div>
   </div>
 </div>
 
 <!-- HUD -->
 <div id="hud">
-  <div class="hud-item">❤️ <span id="lives">3</span></div>
-  <div class="hud-item">💰 <span id="score">0</span></div>
-  <div class="hud-item">🏆 <span id="bestScore">0</span></div>
+  <div class="hud-pill">❤️ <span id="lives">3</span></div>
+  <div class="hud-pill hud-center">
+    <span class="hud-level" id="levelDisp">LVL 1</span>
+    <span class="hud-sep">|</span>
+    💰 <span id="score">0</span>
+  </div>
+  <div class="hud-pill">🏆 <span id="bestScore">0</span></div>
 </div>
-
-<!-- COMBO POPUP -->
-<div id="comboPopup"></div>
 
 <!-- CANVAS -->
 <canvas id="game"></canvas>
@@ -38,20 +44,25 @@
 <!-- PAUSE BTN -->
 <button id="pauseBtn">⏸</button>
 
-<!-- GAME OVER SCREEN -->
+<!-- COMBO -->
+<div id="comboPopup"></div>
+<!-- LEVEL BANNER -->
+<div id="levelBanner"></div>
+
+<!-- GAME OVER -->
 <div id="gameOverScreen">
   <div class="go-card">
-    <div class="go-emoji">💀</div>
-    <h1>GAME OVER</h1>
-    <p class="go-score">Score: <span id="finalScore">0</span></p>
-    <p class="go-best">Best: <span id="finalBestScore">0</span></p>
+    <div class="go-skull">💀</div>
+    <h1 class="go-title">GAME OVER</h1>
+    <div class="go-stats">
+      <div class="go-stat"><span class="go-label">SCORE</span><span class="go-val" id="finalScore">0</span></div>
+      <div class="go-divider"></div>
+      <div class="go-stat"><span class="go-label">BEST</span><span class="go-val gold" id="finalBestScore">0</span></div>
+    </div>
     <div id="newRecord" class="new-record" style="display:none">🎉 NEW RECORD!</div>
-    <button id="restartBtn" class="restart-btn">🔄 TRY AGAIN</button>
+    <button id="restartBtn" class="btn-start" style="font-size:20px;padding:12px 40px">🔄 TRY AGAIN</button>
   </div>
 </div>
-
-<!-- LEVEL UP BANNER -->
-<div id="levelBanner"></div>
 
 <script src="script.js"></script>
 </body>
