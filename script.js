@@ -85,15 +85,15 @@ const C = {
   sun:     "#FFD700",
 };
 
-// ── OBSTACLE SIZES (mobile smaller) ──
+// ── OBSTACLE SIZES ──
 const OBS = {
-  spikeW:  isMobile ? 28 : 40,
-  spikeH:  isMobile ? 36 : 55,
-  fallerW: isMobile ? 34 : 50,
-  fallerH: isMobile ? 34 : 50,
-  wallW:   isMobile ? 20 : 28,
-  wallHmin:isMobile ? 48 : 70,
-  wallHrnd:isMobile ? 28 : 40,
+  spikeW:  isMobile ? 32 : 55,
+  spikeH:  isMobile ? 42 : 75,
+  fallerW: isMobile ? 36 : 65,
+  fallerH: isMobile ? 36 : 65,
+  wallW:   isMobile ? 22 : 38,
+  wallHmin:isMobile ? 50 : 95,
+  wallHrnd:isMobile ? 28 : 50,
 };
 
 // ── STATE ──
@@ -137,15 +137,15 @@ function makeTrees() {
   trees = [];
   let x = 0;
   while (x < canvas.width * 4) {
-    const trunkH = (isMobile ? 40 : 60) + Math.random() * 50;
-    const trunkW = isMobile ? 12 : 18;
-    const leafR  = (isMobile ? 28 : 42) + Math.random() * 22;
+    const trunkH = (isMobile ? 40 : 100) + Math.random() * (isMobile ? 30 : 80);
+    const trunkW = isMobile ? 12 : 28;
+    const leafR  = (isMobile ? 28 : 70) + Math.random() * (isMobile ? 18 : 40);
     trees.push({
       x, trunkW, trunkH, leafR,
-      layer: Math.random() < 0.4 ? 1 : 2, // 1=far, 2=near
+      layer: Math.random() < 0.4 ? 1 : 2,
       shade: Math.floor(Math.random() * 3),
     });
-    x += (isMobile ? 55 : 80) + Math.random() * 60;
+    x += (isMobile ? 55 : 110) + Math.random() * (isMobile ? 50 : 80);
   }
 }
 
@@ -154,17 +154,17 @@ let bgScroll = 0;
 // ── INIT PLAYER ──
 function initPlayer() {
   groundY = canvas.height * GROUND_RATIO;
-  const pw = isMobile ? 88 : 160;   // laptop much bigger
-  const ph = isMobile ? 100 : 180;
+  const pw = isMobile ? 110 : 160;
+  const ph = isMobile ? 125 : 180;
   player = {
-    x: isMobile ? 18 : 80,
-    y: groundY - ph,
-    w: pw,
-    h: ph,
-    dy: 0,
-    grounded: true,
-    jumpsLeft: 2,
-    jumpPower: isMobile ? -22 : -28,
+    x:          isMobile ? 20 : 80,
+    y:          groundY - ph,
+    w:          pw,
+    h:          ph,
+    dy:         0,
+    grounded:   true,
+    jumpsLeft:  2,
+    jumpPower:  isMobile ? -16 : -28,  // mobile jump much lower
   };
 }
 
@@ -299,10 +299,10 @@ function update() {
   // BG scroll
   bgScroll += spd * 0.5;
 
-  // Gravity — tuned per device for smooth feel
-  const gravity = isMobile ? 0.9 : 1.1;
+  // Gravity — laptop floats slow, mobile snappy
+  const gravity = isMobile ? 1.4 : 0.7;
   player.dy += gravity;
-  player.dy  = Math.min(player.dy, 22); // cap fall speed
+  player.dy  = Math.min(player.dy, isMobile ? 18 : 22);
   player.y  += player.dy;
 
   if (player.y + player.h >= groundY) {
@@ -365,18 +365,18 @@ function update() {
       const o = obstacles[i];
       let ox = o.x, oy = o.y, ow = o.w, oh = o.h;
 
-      // spike hit box
+      // spike — accurate triangle hitbox
       if (o.type === "spike") {
-        // triangle — use tighter box
-        oy = groundY - oh * 0.7;
-        oh = oh * 0.7;
+        oy = groundY - oh * 0.75;
+        oh = oh * 0.75;
       }
       if (o.type === "cspike") {
-        oh = oh * 0.7;
+        oh = oh * 0.75;
       }
 
       const box = { x:ox, y:oy, w:ow, h:oh };
-      if (rectHit(player, box, 16)) {
+      const margin = isMobile ? 6 : 10;  // small margin = accurate hits
+      if (rectHit(player, box, margin)) {
         loseLife();
         obstacles.splice(i, 1);
         break;
@@ -709,12 +709,33 @@ function draw() {
   if (!blink) {
     ctx.save();
     const rx = player.x, ry = player.y, rw = player.w, rh = player.h;
+    const radius = isMobile ? 16 : 20;
+
+    // Drop shadow so player stands out from background
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.55)";
+    ctx.shadowBlur  = isMobile ? 12 : 20;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 4;
+    ctx.fillStyle = "transparent";
+    ctx.beginPath();
+    ctx.moveTo(rx + radius, ry);
+    ctx.lineTo(rx + rw - radius, ry);
+    ctx.quadraticCurveTo(rx+rw, ry,   rx+rw, ry+radius);
+    ctx.lineTo(rx+rw, ry+rh-radius);
+    ctx.quadraticCurveTo(rx+rw, ry+rh, rx+rw-radius, ry+rh);
+    ctx.lineTo(rx+radius, ry+rh);
+    ctx.quadraticCurveTo(rx, ry+rh, rx, ry+rh-radius);
+    ctx.lineTo(rx, ry+radius);
+    ctx.quadraticCurveTo(rx, ry, rx+radius, ry);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
 
     if (playerImg.complete && playerImg.naturalWidth > 0) {
-      // Clean rounded clip — no border at all
+      // Rounded clip — clean, no border
       ctx.save();
       ctx.beginPath();
-      const radius = isMobile ? 12 : 18;
       ctx.moveTo(rx + radius, ry);
       ctx.lineTo(rx + rw - radius, ry);
       ctx.quadraticCurveTo(rx+rw, ry,   rx+rw, ry+radius);
@@ -729,18 +750,17 @@ function draw() {
       ctx.drawImage(playerImg, rx, ry, rw, rh);
       ctx.restore();
     } else {
-      // Fallback if image missing
       ctx.fillStyle = "#44aa44";
       ctx.fillRect(rx, ry, rw, rh);
     }
 
-    // Subtle speed lines when jumping
+    // Speed lines when in air
     if (!player.grounded) {
       ctx.strokeStyle = "rgba(60,200,60,0.4)";
       ctx.lineWidth = 2;
-      for (let i = 0; i < 4; i++) {
-        const ly = ry + rh * (0.2 + i * 0.2);
-        const len = 16 + i * 6;
+      for (let i = 0; i < 3; i++) {
+        const ly = ry + rh * (0.25 + i * 0.25);
+        const len = 14 + i * 6;
         ctx.beginPath();
         ctx.moveTo(rx - 4, ly);
         ctx.lineTo(rx - 4 - len, ly);
