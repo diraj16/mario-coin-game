@@ -154,15 +154,18 @@ let bgScroll = 0;
 // ── INIT PLAYER ──
 function initPlayer() {
   groundY = canvas.height * GROUND_RATIO;
+  // Bigger size — clearly visible on both mobile and desktop
+  const pw = isMobile ? 88 : 110;
+  const ph = isMobile ? 100 : 130;
   player = {
-    x: isMobile ? 50 : 130,
-    y: groundY - 90 * SCALE,
-    w: 72 * SCALE,
-    h: 90 * SCALE,
+    x: isMobile ? 18 : 80,        // pushed left so obstacles have room
+    y: groundY - ph,
+    w: pw,
+    h: ph,
     dy: 0,
     grounded: true,
     jumpsLeft: 2,
-    jumpPower: -20 * SCALE,
+    jumpPower: isMobile ? -22 : -24,
   };
 }
 
@@ -217,16 +220,17 @@ function spawnObstacle() {
 }
 
 function spawnCoin() {
+  const ph = player.h;
   const opts = [
-    { y: groundY - player.h * 1.3 },
-    { y: groundY - player.h * 2.0 },
-    { y: groundY - player.h * 2.8 },
+    { y: groundY - ph * 1.2 },
+    { y: groundY - ph * 1.9 },
+    { y: groundY - ph * 2.6 },
   ];
   const o = opts[Math.floor(Math.random() * opts.length)];
   coins.push({
     x: canvas.width + Math.random() * 300 + 100,
     y: o.y,
-    r: 14 * SCALE,
+    r: isMobile ? 13 : 17,
     bob: Math.random() * Math.PI * 2,
     rot: 0,
     glow: 0,
@@ -296,7 +300,7 @@ function update() {
   bgScroll = (bgScroll + spd * 0.5);
 
   // Gravity
-  const gravity = isMobile ? 1.55 : 1.5;
+  const gravity = isMobile ? 1.2 : 1.3;
   player.dy += gravity;
   player.y  += player.dy;
 
@@ -704,20 +708,6 @@ function draw() {
   if (!blink) {
     ctx.save();
 
-    // Player glow aura
-    drawGlow(() => {
-      ctx.beginPath();
-      ctx.ellipse(
-        player.x + player.w/2,
-        player.y + player.h - 6,
-        player.w * 0.45,
-        player.h * 0.12,
-        0, 0, Math.PI*2
-      );
-      ctx.fillStyle = `rgba(0,245,255,0.25)`;
-      ctx.fill();
-    }, C.neon, 20);
-
     // Player photo
     if (playerImg.complete && playerImg.naturalWidth > 0) {
       // Rounded clip for photo
@@ -739,10 +729,10 @@ function draw() {
       ctx.drawImage(playerImg, rx, ry, rw, rh);
       ctx.restore();
 
-      // Neon border around player
+      // Green border around player
       drawGlow(() => {
-        ctx.strokeStyle = C.neon;
-        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = "#44ff44";
+        ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(rx + radius, ry);
         ctx.lineTo(rx + rw - radius, ry);
@@ -755,27 +745,24 @@ function draw() {
         ctx.quadraticCurveTo(rx, ry, rx+radius, ry);
         ctx.closePath();
         ctx.stroke();
-      }, C.neon, 14);
+      }, "#44ff44", 10);
 
     } else {
-      // Fallback: draw a cool character shape
-      drawGlow(() => {
-        ctx.fillStyle = C.neon;
-        ctx.fillRect(player.x, player.y, player.w, player.h);
-      }, C.neon, 20);
+      // Fallback box if image not loaded
+      ctx.fillStyle = "#44aa44";
+      ctx.fillRect(player.x, player.y, player.w, player.h);
     }
 
-    // Jump VFX
+    // Jump speed lines (green)
     if (!player.grounded) {
-      // Speed lines
-      ctx.strokeStyle = `rgba(0,245,255,0.35)`;
+      ctx.strokeStyle = "rgba(60,200,60,0.5)";
       ctx.lineWidth = 2;
       for (let i = 0; i < 4; i++) {
         const ly = player.y + player.h * (0.2 + i * 0.2);
-        const len = 20 + i * 8;
+        const len = 18 + i * 7;
         ctx.beginPath();
-        ctx.moveTo(player.x - 5, ly);
-        ctx.lineTo(player.x - 5 - len, ly);
+        ctx.moveTo(player.x - 4, ly);
+        ctx.lineTo(player.x - 4 - len, ly);
         ctx.stroke();
       }
     }
