@@ -80,20 +80,24 @@ const C = {
 };
 
 // ── STATE ──
-let score, lives, level, combo, comboTimer;
-let paused, gameStarted, gameRunning;
-let invincible, invTimer, flashTimer, shakeAmt;
+let score = 0, lives = 3, level = 1, combo = 0, comboTimer = 0;
+let paused = false, gameStarted = false, gameRunning = false;
+let invincible = false, invTimer = 0, flashTimer = 0, shakeAmt = 0;
 let bestScore = parseInt(localStorage.getItem("charan_hs")) || 0;
 document.getElementById("bestScore").innerText = bestScore;
 
 const BASE_SPEED = isMobile ? 5 : 8;
 const MAX_SPEED  = isMobile ? 14 : 20;
-let spd;
+let spd = BASE_SPEED;
 
 // ── OBJECTS ──
-let player, particles, stars, bgObjs;
-let obstacles, coins, platforms;
-let spawnTimer, spawnInterval;
+let player, stars, bgObjs;
+let obstacles  = [];
+let coins      = [];
+let platforms  = [];
+let particles  = [];
+let spawnTimer = 0;
+let spawnInterval = 115;
 
 // ── STARS (background) ──
 function makeStars() {
