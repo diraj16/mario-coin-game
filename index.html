@@ -2,27 +2,56 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Charan The Runner</title>
-
+  <title>Charan The Runner 🔥</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div id="hud">
-  ❤️ <span id="lives">1</span> |
-  💰 <span id="score">0</span> |
-  🏆 <span id="bestScore">0</span>
+<!-- START SCREEN -->
+<div id="startScreen">
+  <div class="start-content">
+    <div class="title-wrap">
+      <h1 class="game-title">CHARAN<br><span>THE RUNNER</span></h1>
+    </div>
+    <p class="subtitle">Jump. Dodge. Survive. 🔥</p>
+    <button id="startBtn">▶ PLAY NOW</button>
+    <p class="hint">TAP / CLICK / SPACE to Jump</p>
+  </div>
 </div>
 
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-item">❤️ <span id="lives">3</span></div>
+  <div class="hud-item">💰 <span id="score">0</span></div>
+  <div class="hud-item">🏆 <span id="bestScore">0</span></div>
+</div>
+
+<!-- COMBO POPUP -->
+<div id="comboPopup"></div>
+
+<!-- CANVAS -->
 <canvas id="game"></canvas>
 
+<!-- PAUSE BTN -->
+<button id="pauseBtn">⏸</button>
+
+<!-- GAME OVER SCREEN -->
 <div id="gameOverScreen">
-  <h1>Game Over</h1>
-  <p>Score: <span id="finalScore">0</span></p>
-  <p>High Score: <span id="finalBestScore">0</span></p>
+  <div class="go-card">
+    <div class="go-emoji">💀</div>
+    <h1>GAME OVER</h1>
+    <p class="go-score">Score: <span id="finalScore">0</span></p>
+    <p class="go-best">Best: <span id="finalBestScore">0</span></p>
+    <div id="newRecord" class="new-record" style="display:none">🎉 NEW RECORD!</div>
+    <button id="restartBtn" class="restart-btn">🔄 TRY AGAIN</button>
+  </div>
 </div>
+
+<!-- LEVEL UP BANNER -->
+<div id="levelBanner"></div>
 
 <script src="script.js"></script>
 </body>
