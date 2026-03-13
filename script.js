@@ -164,7 +164,7 @@ function initPlayer() {
     dy:         0,
     grounded:   true,
     jumpsLeft:  2,
-    jumpPower:  isMobile ? -16 : -28,  // mobile jump much lower
+    jumpPower:  isMobile ? -16 : -20,  // mobile jump much lower
   };
 }
 
@@ -300,7 +300,7 @@ function update() {
   bgScroll += spd * 0.5;
 
   // Gravity — laptop floats slow, mobile snappy
-  const gravity = isMobile ? 1.4 : 0.7;
+  const gravity = isMobile ? 1.4 : 1.0;
   player.dy += gravity;
   player.dy  = Math.min(player.dy, isMobile ? 18 : 22);
   player.y  += player.dy;
@@ -711,30 +711,8 @@ function draw() {
     const rx = player.x, ry = player.y, rw = player.w, rh = player.h;
     const radius = isMobile ? 16 : 20;
 
-    // Drop shadow so player stands out from background
-    ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.55)";
-    ctx.shadowBlur  = isMobile ? 12 : 20;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 4;
-    ctx.fillStyle = "transparent";
-    ctx.beginPath();
-    ctx.moveTo(rx + radius, ry);
-    ctx.lineTo(rx + rw - radius, ry);
-    ctx.quadraticCurveTo(rx+rw, ry,   rx+rw, ry+radius);
-    ctx.lineTo(rx+rw, ry+rh-radius);
-    ctx.quadraticCurveTo(rx+rw, ry+rh, rx+rw-radius, ry+rh);
-    ctx.lineTo(rx+radius, ry+rh);
-    ctx.quadraticCurveTo(rx, ry+rh, rx, ry+rh-radius);
-    ctx.lineTo(rx, ry+radius);
-    ctx.quadraticCurveTo(rx, ry, rx+radius, ry);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    if (playerImg.complete && playerImg.naturalWidth > 0) {
-      // Rounded clip — clean, no border
-      ctx.save();
+    // Build rounded rect path helper
+    function roundedPath() {
       ctx.beginPath();
       ctx.moveTo(rx + radius, ry);
       ctx.lineTo(rx + rw - radius, ry);
@@ -746,12 +724,65 @@ function draw() {
       ctx.lineTo(rx, ry+radius);
       ctx.quadraticCurveTo(rx, ry, rx+radius, ry);
       ctx.closePath();
-      ctx.clip();
-      ctx.drawImage(playerImg, rx, ry, rw, rh);
+    }
+
+    if (isMobile) {
+      // ── MOBILE: thick white outline + heavy drop shadow ──
+
+      // 1. Big black drop shadow
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur  = 18;
+      ctx.shadowOffsetX = 4;
+      ctx.shadowOffsetY = 5;
+      roundedPath();
+      ctx.fillStyle = "#fff";
+      ctx.fill();
       ctx.restore();
+
+      // 2. White outline stroke (3px each side = 6px total visible)
+      ctx.save();
+      roundedPath();
+      ctx.strokeStyle = "rgba(255,255,255,0.95)";
+      ctx.lineWidth = 6;
+      ctx.stroke();
+      ctx.restore();
+
+      // 3. Draw player image clipped
+      ctx.save();
+      roundedPath();
+      ctx.clip();
+      if (playerImg.complete && playerImg.naturalWidth > 0) {
+        ctx.drawImage(playerImg, rx, ry, rw, rh);
+      } else {
+        ctx.fillStyle = "#44aa44";
+        ctx.fill();
+      }
+      ctx.restore();
+
     } else {
-      ctx.fillStyle = "#44aa44";
-      ctx.fillRect(rx, ry, rw, rh);
+      // ── DESKTOP: subtle drop shadow only ──
+      ctx.save();
+      ctx.shadowColor = "rgba(0,0,0,0.55)";
+      ctx.shadowBlur  = 20;
+      ctx.shadowOffsetX = 3;
+      ctx.shadowOffsetY = 4;
+      roundedPath();
+      ctx.fillStyle = "rgba(0,0,0,0.01)";
+      ctx.fill();
+      ctx.restore();
+
+      // Draw image clipped
+      ctx.save();
+      roundedPath();
+      ctx.clip();
+      if (playerImg.complete && playerImg.naturalWidth > 0) {
+        ctx.drawImage(playerImg, rx, ry, rw, rh);
+      } else {
+        ctx.fillStyle = "#44aa44";
+        ctx.fill();
+      }
+      ctx.restore();
     }
 
     // Speed lines when in air
