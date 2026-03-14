@@ -864,7 +864,12 @@ function endGame() {
   document.getElementById("newRecord").style.display   = isNew ? "block" : "none";
   document.getElementById("gameOverScreen").classList.add("show");
 
-  setTimeout(restartGame, (gameOverMusic.duration || 3.5) * 1000 + 600);
+  // Restart exactly when audio ends
+  let restarted = false;
+  const doRestart = () => { if (!restarted) { restarted = true; restartGame(); } };
+  gameOverMusic.onended = doRestart;
+  // Fallback if audio fails to play or duration unknown
+  setTimeout(doRestart, (gameOverMusic.duration > 0 ? gameOverMusic.duration : 4) * 1000 + 500);
 }
 
 // ── RESTART ──
